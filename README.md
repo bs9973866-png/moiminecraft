@@ -7,7 +7,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Seeded 16×64×16 chunk terrain.
 - Exposed-face mesh generation; no GameObject per voxel.
 - Chunk streaming with a per-frame generation budget and distant-chunk unloading.
-- Procedural forest patches with voxel trunks and leaf crowns.
+- Procedural forest patches with voxel trunks and leaf crowns.\n- Underground coal, iron, gold and diamond ore deposits with depth-based rarity.\n- Gravel deposits and bedrock floor.\n- Budgeted falling sand/gravel physics triggered by nearby block edits.
 - Shallow sea-level lakes and shorelines.
 - Rare underground pockets with lava springs.
 - Separate transparent liquid mesh for water and lava.
@@ -50,7 +50,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 1. Finish terrain and liquid simulation.
 2. Block breaking/placing and mobile hotbar.
 3. Inventory and crafting.
-4. Caves, ores, more biomes and structures.
+4. Expand caves, add more biomes and structures.
 5. Main menu, settings, world saves and mod API.
 
 Original voxel sandbox prototype; not affiliated with Mojang or Microsoft.
