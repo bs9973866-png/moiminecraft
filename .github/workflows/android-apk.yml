@@ -54,6 +54,18 @@ jobs:
           export/android/debug_keystore_pass = "android"
           EOF
 
+      - name: Configure Android preset signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("export_presets.cfg")
+          content = path.read_text()
+          content = content.replace('keystore/debug=""', 'keystore/debug="' + str(Path(".ci/debug.keystore").resolve()) + '"')
+          content = content.replace('keystore/debug_user=""', 'keystore/debug_user="androiddebugkey"')
+          content = content.replace('keystore/debug_password=""', 'keystore/debug_password="android"')
+          path.write_text(content)
+          PY
+
       - name: Import project
         run: godot --headless --path . --editor --quit
 
