@@ -8,8 +8,8 @@ namespace NovaCraft.World
     {
         [Header("World")]
         [SerializeField] private int seed = 481516;
-        [SerializeField, Range(1, 8)] private int renderDistance = 3;
-        [SerializeField, Range(1, 4)] private int chunksPerFrame = 1;
+        [SerializeField, Range(1, 6)] private int renderDistance = 3;
+        [SerializeField, Range(1, 2)] private int chunksPerFrame = 1;
         [SerializeField] private Transform player;
         [SerializeField] private Material chunkMaterial;
         private readonly Dictionary<Vector2Int, VoxelChunk> chunks = new Dictionary<Vector2Int, VoxelChunk>();
@@ -26,11 +26,9 @@ namespace NovaCraft.World
             offsetZ = Random.Range(-10000f, 10000f);
             if (chunkMaterial == null)
             {
-                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-                if (shader == null) shader = Shader.Find("Standard");
-                if (shader == null) shader = Shader.Find("Sprites/Default");
+                Shader shader = Shader.Find("NovaCraft/VoxelVertexColor");
+                if (shader == null) shader = Shader.Find("Unlit/Color");
                 chunkMaterial = new Material(shader);
-                chunkMaterial.enableInstancing = true;
             }
             RefreshQueue();
             StartCoroutine(GenerateLoop());
@@ -40,10 +38,35 @@ namespace NovaCraft.World
         {
             if (player == null) return;
             Vector2Int center = PlayerChunk();
-            if (center != lastCenter) { lastCenter = center; RefreshQueue(); }
+            if (center != lastCenter)
+            {
+                lastCenter = center;
+                UnloadDistantChunks(center);
+                RefreshQueue();
+            }
         }
 
         private Vector2Int PlayerChunk() => new Vector2Int(Mathf.FloorToInt(player.position.x / VoxelChunk.Width), Mathf.FloorToInt(player.position.z / VoxelChunk.Width));
+
+        private void UnloadDistantChunks(Vector2Int center)
+        {
+            int keepDistance = renderDistance + 1;
+            var remove = new List<Vector2Int>();
+            foreach (var pair in chunks)
+                if ((pair.Key - center).sqrMagnitude > keepDistance * keepDistance) remove.Add(pair.Key);
+            foreach (var key in remove)
+            {
+                Destroy(chunks[key].gameObject);
+                chunks.Remove(key);
+            }
+            int count = pending.Count;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2Int key = pending.Dequeue();
+                if ((key - center).sqrMagnitude <= renderDistance * renderDistance) pending.Enqueue(key);
+                else queued.Remove(key);
+            }
+        }
 
         private void RefreshQueue()
         {
@@ -70,7 +93,9 @@ namespace NovaCraft.World
                 {
                     Vector2Int key = pending.Dequeue();
                     queued.Remove(key);
-                    if (!chunks.ContainsKey(key)) CreateChunk(key);
+                    if (!chunks.ContainsKey(key) && player != null &&
+                        (key - PlayerChunk()).sqrMagnitude <= (renderDistance + 1) * (renderDistance + 1))
+                        CreateChunk(key);
                     count++;
                     yield return null;
                 }
