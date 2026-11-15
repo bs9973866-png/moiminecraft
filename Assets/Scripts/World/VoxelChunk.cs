@@ -91,6 +91,12 @@ namespace NovaCraft.World
                 case BlockType.Sand: tint = new Color(0.82f, 0.75f, 0.49f); break;
                 case BlockType.Wood: tint = new Color(0.42f, 0.27f, 0.13f); break;
                 case BlockType.Leaves: tint = new Color(0.20f, 0.48f, 0.17f); break;
+                case BlockType.Gravel: tint = new Color(0.48f, 0.47f, 0.45f); break;
+                case BlockType.CoalOre: tint = new Color(0.22f, 0.23f, 0.25f); break;
+                case BlockType.IronOre: tint = new Color(0.70f, 0.48f, 0.37f); break;
+                case BlockType.GoldOre: tint = new Color(0.95f, 0.72f, 0.16f); break;
+                case BlockType.DiamondOre: tint = new Color(0.18f, 0.86f, 0.83f); break;
+                case BlockType.Bedrock: tint = new Color(0.16f, 0.16f, 0.18f); break;
                 default: tint = new Color(0.52f, 0.53f, 0.56f); break;
             }
             if (IsTransparentOrAir(GetBlock(x, y + 1, z))) Face(new Vector3(x,y+1,z), new Vector3(x,y+1,z+1), new Vector3(x+1,y+1,z+1), new Vector3(x+1,y+1,z), tint, v,t,c);
