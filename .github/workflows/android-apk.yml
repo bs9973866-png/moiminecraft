@@ -3,40 +3,54 @@ name: Build NovaCraft Android APK
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - "Assets/**"
-      - "Packages/**"
-      - "ProjectSettings/**"
+      - "project.godot"
+      - "scenes/**"
+      - "scripts/**"
+      - "export_presets.cfg"
       - ".github/workflows/android-apk.yml"
 
 jobs:
   build-android:
-    name: Build Android APK
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build APK with Unity
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          projectPath: .
-          unityVersion: 2022.3.62f1
-          targetPlatform: Android
-          buildMethod: NovaCraft.Editor.AndroidBuild.Build
-          allowDirtyBuild: true
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          yes | sdkmanager --licenses
+
+      - name: Set up Godot 4.5.1 and export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project
+        run: godot --headless --path . --editor --quit
+
+      - name: Export Android APK
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-debug "Android" build/NovaCraft.apk
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: NovaCraft-Android-APK
-          path: Build/NovaCraft.apk
+          path: build/NovaCraft.apk
           if-no-files-found: error
           retention-days: 14
