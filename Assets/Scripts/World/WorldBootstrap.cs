@@ -10,19 +10,24 @@ namespace NovaCraft.World
             QualitySettings.vSyncCount = 0;
             QualitySettings.shadows = ShadowQuality.Disable;
             QualitySettings.antiAliasing = 0;
+
             var player = new GameObject("Player");
             player.transform.position = new Vector3(8, 70, 8);
             var controller = player.AddComponent<CharacterController>();
             controller.height = 1.8f;
             controller.radius = 0.32f;
             controller.center = new Vector3(0, 0.9f, 0);
+
             var cameraObject = new GameObject("Main Camera");
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(player.transform, false);
             cameraObject.transform.localPosition = new Vector3(0, 1.55f, 0);
             cameraObject.AddComponent<Camera>();
             cameraObject.AddComponent<AudioListener>();
-            player.AddComponent<MobileVoxelPlayer>();\n            player.AddComponent<MobileVoxelInteraction>();
+
+            player.AddComponent<MobileVoxelPlayer>();
+            player.AddComponent<MobileVoxelInteraction>();
+
             var worldObject = new GameObject("VoxelWorld");
             var world = worldObject.AddComponent<VoxelWorld>();
             world.Player = player.transform;
@@ -39,6 +44,9 @@ namespace NovaCraft.World
         private float pitch;
         private float verticalVelocity;
         private int lookFinger = -1;
+        private bool jumpRequested;
+
+        public void RequestJump() { jumpRequested = true; }
 
         private void Start()
         {
@@ -49,13 +57,13 @@ namespace NovaCraft.World
 
         private void Update()
         {
-            jumpRequested = false;\n            Vector2 move = Vector2.zero;
+            Vector2 move = Vector2.zero;
             Vector2 look = Vector2.zero;
             if (Application.isEditor)
             {
                 move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
                 look = new Vector2(Input.GetAxis("Mouse X") * 3f, Input.GetAxis("Mouse Y") * 3f);
-                if ((Input.GetKeyDown(KeyCode.Space) || jumpRequested) && controller.isGrounded) verticalVelocity = 7f;
+                if (Input.GetKeyDown(KeyCode.Space)) jumpRequested = true;
             }
             else
             {
@@ -78,6 +86,10 @@ namespace NovaCraft.World
                     }
                 }
             }
+
+            if (jumpRequested && controller.isGrounded) verticalVelocity = 7f;
+            jumpRequested = false;
+
             transform.Rotate(0, look.x, 0);
             pitch = Mathf.Clamp(pitch - look.y, -85f, 85f);
             view.localRotation = Quaternion.Euler(pitch, 0, 0);
