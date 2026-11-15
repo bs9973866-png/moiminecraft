@@ -16,6 +16,8 @@ var slot_buttons: Array[Button] = []
 var hotbar_label: Label
 var held_axes: Dictionary = {}
 
+signal inventory_changed
+
 func _ready() -> void:
 	inventory.resize(SLOT_COUNT)
 	inventory.fill(0)
@@ -158,10 +160,34 @@ func remove_selected_block() -> void:
 			item_counts[selected_slot] = 0
 			inventory[selected_slot] = 0
 		_refresh_inventory()
+	inventory_changed.emit()
+
+func serialize_inventory() -> Dictionary:
+	return {
+		"blocks": inventory.duplicate(),
+		"counts": item_counts.duplicate(),
+		"selected": selected_slot
+	}
+
+func load_inventory(data: Dictionary) -> void:
+	var saved_blocks = data.get("blocks", [])
+	var saved_counts = data.get("counts", [])
+	for i in range(mini(SLOT_COUNT, saved_blocks.size())):
+		inventory[i] = clampi(int(saved_blocks[i]), 0, 3)
+	for i in range(mini(SLOT_COUNT, saved_counts.size())):
+		item_counts[i] = clampi(int(saved_counts[i]), 0, 64)
+	for i in range(SLOT_COUNT):
+		if item_counts[i] == 0:
+			inventory[i] = 0
+		elif inventory[i] == 0:
+			item_counts[i] = 0
+	selected_slot = clampi(int(data.get("selected", 0)), 0, SLOT_COUNT - 1)
+	_refresh_inventory()
 
 func _select_slot(index: int) -> void:
 	selected_slot = index
 	_refresh_inventory()
+	inventory_changed.emit()
 
 func toggle_inventory() -> void:
 	inventory_panel.visible = not inventory_panel.visible
