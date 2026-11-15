@@ -18,7 +18,8 @@ namespace NovaCraft.World
         private readonly Queue<Vector2Int> pending = new Queue<Vector2Int>();
         private readonly HashSet<Vector2Int> queued = new HashSet<Vector2Int>();
         private readonly HashSet<VoxelChunk> dirtyChunks = new HashSet<VoxelChunk>();
-        private FluidSimulation fluidSimulation;\n        private FallingBlockSimulation fallingSimulation;
+        private FluidSimulation fluidSimulation;
+        private FallingBlockSimulation fallingSimulation;
         private float offsetX, offsetZ;
         private Vector2Int lastCenter = new Vector2Int(int.MinValue, int.MinValue);
         public Transform Player { set => player = value; }
@@ -43,7 +44,9 @@ namespace NovaCraft.World
                 liquidMaterial = new Material(liquidShader);
             }
             fluidSimulation = gameObject.AddComponent<FluidSimulation>();
-            fluidSimulation.Initialize(this);\n            fallingSimulation = gameObject.AddComponent<FallingBlockSimulation>();\n            fallingSimulation.Initialize(this);
+            fluidSimulation.Initialize(this);
+            fallingSimulation = gameObject.AddComponent<FallingBlockSimulation>();
+            fallingSimulation.Initialize(this);
             RefreshQueue();
             StartCoroutine(GenerateLoop());
         }
