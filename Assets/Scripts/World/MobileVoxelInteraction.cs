@@ -341,6 +341,20 @@ namespace NovaCraft.World
             SaveInventory();
         }
 
+        private void CraftBestAvailablePickaxe()
+        {
+            BlockType[] materials = { BlockType.Planks, BlockType.Stone, BlockType.IronOre };
+            foreach (BlockType material in materials)
+            {
+                BlockType tool = material == BlockType.Planks ? BlockType.WoodenPickaxe :
+                    material == BlockType.Stone ? BlockType.StonePickaxe : BlockType.IronPickaxe;
+                if (!HasItems(material, 3) || !HasItems(BlockType.Stick, 2) || !HasCapacity(tool, 1))
+                    continue;
+                CraftPickaxe(material);
+                return;
+            }
+        }
+
         private void SelectOrMoveSlot(int index)
         {
             if (movingSlot < 0)
@@ -473,12 +487,8 @@ namespace NovaCraft.World
             if (GUI.Button(new Rect(x + margin, recipeY + recipeHeight + recipeGap, recipeWidth, recipeHeight),
                 "ПАЛКИ\n2 доски → 4", buttonStyle)) CraftSticks();
             if (GUI.Button(new Rect(rightX, recipeY + recipeHeight + recipeGap, recipeWidth, recipeHeight),
-                "КИРКА\n3 доски/камня/железа + 2 палки", buttonStyle))
-            {
-                if (HasItems(BlockType.Planks, 3)) CraftPickaxe(BlockType.Planks);
-                else if (HasItems(BlockType.Stone, 3)) CraftPickaxe(BlockType.Stone);
-                else CraftPickaxe(BlockType.IronOre);
-            }
+                "КИРКА\n3 материала + 2 палки", buttonStyle))
+                CraftBestAvailablePickaxe();
         }
 
         private static string ShortName(BlockType type)
