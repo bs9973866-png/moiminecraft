@@ -16,7 +16,9 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Separate transparent liquid mesh for water and lava.
 - Budgeted cellular-automata liquid flow: water ticks faster and spreads farther than lava; liquids fall first, then spread sideways.
 - Water/lava contact converts the contacted liquid cell into stone.
-- Touch-first block breaking and placing with a five-slot hotbar and simple block counts.
+- Touch-first block breaking and placing with a five-slot hotbar and a 24-slot stack inventory.
+- Mobile inventory screen with tap-to-select, stack merging and slot swapping.
+- Starter crafting recipes: one log makes four planks; four planks make a placeable crafting table.
 - Solid terrain mesh collider excludes liquid geometry.
 
 ## Unity setup
@@ -31,7 +33,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 ## Controls
 
 - Editor: WASD + mouse look, Space to jump, left mouse breaks, right mouse places, number keys 1–5 select hotbar slots.
-- Android: left half moves; drag on the right half looks around; BREAK and PLACE edit the targeted block; tap a hotbar slot to select a block; JUMP requests a jump.
+- Android: left half moves; drag on the right half looks around; BREAK and PLACE edit the targeted block; tap a hotbar slot to select a block; JUMP requests a jump; INV opens the inventory. In the inventory, tap one slot and then another to move, swap or merge stacks.
 
 ## Performance notes
 
@@ -48,13 +50,13 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Liquids are grid-based gameplay fluids, not physically accurate fluid dynamics.
 - Fluid simulation currently updates loaded chunks only; unloaded-chunk fluid persistence is not implemented yet.
 - Liquid blocks currently render as shallow full-cell surfaces; per-cell fluid-height blending and waves are planned.
-- Block counts and world edits are not saved yet.
+- Inventory, crafting results and world edits are not saved yet.
 - The touch UI is an initial prototype and needs device testing for different aspect ratios and safe areas.
 
 ## Roadmap
 
 1. Improve caves and liquid surfaces.
-2. Add inventory screen, crafting and tools.
+2. Add tools, durability, world saves and more crafting recipes.
 3. Add world saves and more biomes/structures.
 4. Add main menu, settings and mod API.
 
