@@ -3,10 +3,15 @@ extends Node3D
 const WorldScript = preload("res://scripts/voxel_world.gd")
 const PlayerScript = preload("res://scripts/player_controller.gd")
 const HudScript = preload("res://scripts/mobile_hud.gd")
+const SAVE_PATH := "user://novacraft_save.json"
+
+var world: Variant
+var hud: Variant
+var is_loading := false
 
 func _ready() -> void:
 	_build_environment()
-	var world = WorldScript.new()
+	world = WorldScript.new()
 	world.name = "VoxelWorld"
 	add_child(world)
 
@@ -16,11 +21,48 @@ func _ready() -> void:
 	add_child(player)
 	player.world = world
 
-	var hud = HudScript.new()
+	hud = HudScript.new()
 	hud.name = "MobileHUD"
 	add_child(hud)
 	hud.player = player
 	player.hud = hud
+
+	world.world_changed.connect(_save_game)
+	hud.inventory_changed.connect(_save_game)
+	call_deferred("_load_game")
+
+func _load_game() -> void:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		push_warning("NovaCraft: не удалось открыть сохранение")
+		return
+	var parsed = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		push_warning("NovaCraft: файл сохранения повреждён")
+		return
+	is_loading = true
+	if parsed.has("world") and parsed["world"] is Array:
+		world.load_blocks(parsed["world"])
+	if parsed.has("inventory") and parsed["inventory"] is Dictionary:
+		hud.load_inventory(parsed["inventory"])
+	is_loading = false
+
+func _save_game() -> void:
+	if is_loading or not is_instance_valid(world) or not is_instance_valid(hud):
+		return
+	var data := {
+		"version": 1,
+		"world": world.serialize_blocks(),
+		"inventory": hud.serialize_inventory()
+	}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("NovaCraft: не удалось записать сохранение")
+		return
+	file.store_string(JSON.stringify(data))
+	file.flush()
 
 func _build_environment() -> void:
 	var sun := DirectionalLight3D.new()
