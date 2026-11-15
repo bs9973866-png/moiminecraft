@@ -58,9 +58,13 @@ jobs:
         run: godot --headless --path . --editor --quit
 
       - name: Export Android APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/.ci/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p build
-          godot --headless --path . --export-debug "Android" build/NovaCraft.apk
+          godot --headless --verbose --path . --export-debug "Android" build/NovaCraft.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
