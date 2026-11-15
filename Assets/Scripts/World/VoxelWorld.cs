@@ -44,8 +44,8 @@ namespace NovaCraft.World
         {
             saveKey = "NovaCraft.WorldEdits." + seed;
             LoadWorldEdits();
-            Random.InitState(seed);
-            offsetX = Random.Range(-10000f, 10000f);
+            UnityEngine.Random.InitState(seed);
+            offsetX = UnityEngine.Random.Range(-10000f, 10000f);
             offsetZ = Random.Range(-10000f, 10000f);
             if (chunkMaterial == null)
             {
