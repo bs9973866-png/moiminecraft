@@ -92,6 +92,10 @@ namespace NovaCraft.World
                 case BlockType.Wood: tint = new Color(0.42f, 0.27f, 0.13f); break;
                 case BlockType.Planks: tint = new Color(0.72f, 0.49f, 0.25f); break;
                 case BlockType.CraftingTable: tint = new Color(0.56f, 0.34f, 0.16f); break;
+                case BlockType.Stick: tint = new Color(0.62f, 0.40f, 0.20f); break;
+                case BlockType.WoodenPickaxe: tint = new Color(0.55f, 0.34f, 0.17f); break;
+                case BlockType.StonePickaxe: tint = new Color(0.48f, 0.50f, 0.54f); break;
+                case BlockType.IronPickaxe: tint = new Color(0.78f, 0.80f, 0.84f); break;
                 case BlockType.Leaves: tint = new Color(0.20f, 0.48f, 0.17f); break;
                 case BlockType.Gravel: tint = new Color(0.48f, 0.47f, 0.45f); break;
                 case BlockType.CoalOre: tint = new Color(0.22f, 0.23f, 0.25f); break;
