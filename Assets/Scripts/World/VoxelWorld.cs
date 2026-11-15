@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,6 +15,20 @@ namespace NovaCraft.World
         [SerializeField] private Material chunkMaterial;
         [SerializeField] private Material liquidMaterial;
 
+        [Serializable]
+        private sealed class BlockEdit
+        {
+            public int x, y, z, type;
+        }
+
+        [Serializable]
+        private sealed class WorldSaveData
+        {
+            public List<BlockEdit> edits = new List<BlockEdit>();
+        }
+
+        private readonly Dictionary<Vector3Int, BlockType> savedEdits = new Dictionary<Vector3Int, BlockType>();
+        private string saveKey;
         private readonly Dictionary<Vector2Int, VoxelChunk> chunks = new Dictionary<Vector2Int, VoxelChunk>();
         private readonly Queue<Vector2Int> pending = new Queue<Vector2Int>();
         private readonly HashSet<Vector2Int> queued = new HashSet<Vector2Int>();
@@ -27,6 +42,8 @@ namespace NovaCraft.World
 
         private void Start()
         {
+            saveKey = "NovaCraft.WorldEdits." + seed;
+            LoadWorldEdits();
             Random.InitState(seed);
             offsetX = Random.Range(-10000f, 10000f);
             offsetZ = Random.Range(-10000f, 10000f);
@@ -187,10 +204,82 @@ namespace NovaCraft.World
                     fluidSources.Add(new Vector3Int(worldX, 7, worldZ));
                 }
             }
+            ApplySavedEdits(key, chunk);
             chunk.BuildMesh();
             chunks.Add(key, chunk);
             foreach (Vector3Int source in fluidSources)
                 fluidSimulation.AddSource(source, GetBlock(source) == BlockType.Lava ? BlockType.Lava : BlockType.Water);
+        }
+
+        private void LoadWorldEdits()
+        {
+            savedEdits.Clear();
+            if (string.IsNullOrEmpty(saveKey) || !PlayerPrefs.HasKey(saveKey)) return;
+            try
+            {
+                WorldSaveData data = JsonUtility.FromJson<WorldSaveData>(PlayerPrefs.GetString(saveKey));
+                if (data == null || data.edits == null) return;
+                foreach (BlockEdit edit in data.edits)
+                {
+                    if (edit == null || edit.y < 0 || edit.y >= VoxelChunk.Height ||
+                        edit.type < 0 || edit.type > byte.MaxValue ||
+                        !Enum.IsDefined(typeof(BlockType), (byte)edit.type)) continue;
+                    savedEdits[new Vector3Int(edit.x, edit.y, edit.z)] = (BlockType)edit.type;
+                }
+            }
+            catch (Exception)
+            {
+                savedEdits.Clear();
+                PlayerPrefs.DeleteKey(saveKey);
+            }
+        }
+
+        private void SaveWorldEdits()
+        {
+            if (string.IsNullOrEmpty(saveKey)) return;
+            WorldSaveData data = new WorldSaveData();
+            foreach (var pair in savedEdits)
+            {
+                data.edits.Add(new BlockEdit
+                {
+                    x = pair.Key.x,
+                    y = pair.Key.y,
+                    z = pair.Key.z,
+                    type = (int)pair.Value
+                });
+            }
+            PlayerPrefs.SetString(saveKey, JsonUtility.ToJson(data));
+            PlayerPrefs.Save();
+        }
+
+        private void ApplySavedEdits(Vector2Int chunkKey, VoxelChunk chunk)
+        {
+            foreach (var pair in savedEdits)
+            {
+                Vector3Int p = pair.Key;
+                int cx = Mathf.FloorToInt(p.x / (float)VoxelChunk.Width);
+                int cz = Mathf.FloorToInt(p.z / (float)VoxelChunk.Width);
+                if (cx != chunkKey.x || cz != chunkKey.y) continue;
+                chunk.SetBlock(p.x - cx * VoxelChunk.Width, p.y, p.z - cz * VoxelChunk.Width, pair.Value);
+            }
+        }
+
+        public bool SetPlayerBlock(Vector3Int worldPosition, BlockType type)
+        {
+            if (!SetBlock(worldPosition, type)) return false;
+            savedEdits[worldPosition] = type;
+            SaveWorldEdits();
+            return true;
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) SaveWorldEdits();
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveWorldEdits();
         }
 
         public BlockType GetBlock(Vector3Int worldPosition)
