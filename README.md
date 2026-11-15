@@ -18,7 +18,8 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Water/lava contact converts the contacted liquid cell into stone.
 - Touch-first block breaking and placing with a five-slot hotbar and a 24-slot stack inventory.
 - Mobile inventory screen with tap-to-select, stack merging and slot swapping.
-- Starter crafting recipes: one log makes four planks; four planks make a placeable crafting table.
+- Starter crafting recipes: one log makes four planks; two planks make four sticks; four planks make a crafting table; three planks/stone/iron ore plus two sticks make a pickaxe.
+- Wooden, stone and iron pickaxes have individual durability; mining stone and ores requires a suitable pickaxe tier.
 - Solid terrain mesh collider excludes liquid geometry.
 
 ## Unity setup
@@ -33,7 +34,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 ## Controls
 
 - Editor: WASD + mouse look, Space to jump, left mouse breaks, right mouse places, number keys 1–5 select hotbar slots.
-- Android: left half moves; drag on the right half looks around; BREAK and PLACE edit the targeted block; tap a hotbar slot to select a block; JUMP requests a jump; INV opens the inventory. In the inventory, tap one slot and then another to move, swap or merge stacks.
+- Android: left half moves; drag on the right half looks around; BREAK and PLACE edit the targeted block; tap a hotbar slot to select a block; JUMP requests a jump; INV opens the inventory. In the inventory, tap one slot and then another to move, swap or merge stacks. Crafted pickaxes are non-stackable and show remaining durability.
 
 ## Performance notes
 
@@ -56,7 +57,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 ## Roadmap
 
 1. Improve caves and liquid surfaces.
-2. Add tools, durability, world saves and more crafting recipes.
+2. Add axes/shovels, mining progress, world saves and more crafting recipes.
 3. Add world saves and more biomes/structures.
 4. Add main menu, settings and mod API.
 
