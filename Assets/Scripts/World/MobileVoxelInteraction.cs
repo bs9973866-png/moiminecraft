@@ -81,7 +81,7 @@ namespace NovaCraft.World
                 for (int i = 0; i < InventorySize; i++)
                 {
                     int rawType = data.types[i];
-                    BlockType type = Enum.IsDefined(typeof(BlockType), rawType) ? (BlockType)rawType : BlockType.Air;
+                    BlockType type = rawType >= 0 && rawType <= byte.MaxValue && Enum.IsDefined(typeof(BlockType), (byte)rawType) ? (BlockType)rawType : BlockType.Air;
                     int count = Mathf.Clamp(data.counts[i], 0, ItemMaxStack(type));
                     slotTypes[i] = count > 0 ? type : BlockType.Air;
                     slotCounts[i] = count;
@@ -147,7 +147,7 @@ namespace NovaCraft.World
             if (Application.isEditor)
             {
                 for (int i = 0; i < HotbarSize; i++)
-                    if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) selectedSlot = i;
+                    if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) { selectedSlot = i; SaveInventory(); }
                 if (Input.GetMouseButtonDown(0)) BreakTarget();
                 if (Input.GetMouseButtonDown(1)) PlaceBlock();
                 if (Input.GetKeyDown(KeyCode.E)) inventoryOpen = !inventoryOpen;
@@ -406,7 +406,7 @@ namespace NovaCraft.World
             {
                 string caption = (i + 1) + "\n" + (slotCounts[i] > 0 ? ShortName(slotTypes[i]) : "-") + "\n" + slotCounts[i] + (IsTool(slotTypes[i]) ? " / " + toolDurability[i] : "");
                 GUI.backgroundColor = i == selectedSlot ? new Color(0.35f, 0.75f, 1f) : new Color(0.22f, 0.24f, 0.30f);
-                if (GUI.Button(new Rect(startX + i * (slot + 5f * scale), y, slot, slot), caption, buttonStyle)) selectedSlot = i;
+                if (GUI.Button(new Rect(startX + i * (slot + 5f * scale), y, slot, slot), caption, buttonStyle)) { selectedSlot = i; SaveInventory(); }
             }
             GUI.backgroundColor = Color.white;
 
