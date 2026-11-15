@@ -18,7 +18,7 @@ namespace NovaCraft.World
         private readonly Queue<Vector2Int> pending = new Queue<Vector2Int>();
         private readonly HashSet<Vector2Int> queued = new HashSet<Vector2Int>();
         private readonly HashSet<VoxelChunk> dirtyChunks = new HashSet<VoxelChunk>();
-        private FluidSimulation fluidSimulation;
+        private FluidSimulation fluidSimulation;\n        private FallingBlockSimulation fallingSimulation;
         private float offsetX, offsetZ;
         private Vector2Int lastCenter = new Vector2Int(int.MinValue, int.MinValue);
         public Transform Player { set => player = value; }
@@ -43,7 +43,7 @@ namespace NovaCraft.World
                 liquidMaterial = new Material(liquidShader);
             }
             fluidSimulation = gameObject.AddComponent<FluidSimulation>();
-            fluidSimulation.Initialize(this);
+            fluidSimulation.Initialize(this);\n            fallingSimulation = gameObject.AddComponent<FallingBlockSimulation>();\n            fallingSimulation.Initialize(this);
             RefreshQueue();
             StartCoroutine(GenerateLoop());
         }
@@ -211,6 +211,22 @@ namespace NovaCraft.World
             chunk.SetBlock(lx, worldPosition.y, lz, type);
             dirtyChunks.Add(chunk);
             return true;
+        }
+
+        private BlockType ChooseUndergroundBlock(int x, int y, int z)
+        {
+            uint hash = (uint)(x * 73428767) ^ (uint)(y * 912931) ^ (uint)(z * 438289);
+            hash ^= (uint)seed;
+            hash = (hash ^ (hash >> 16)) * 0x7feb352du;
+            hash = (hash ^ (hash >> 15)) * 0x846ca68bu;
+            hash ^= hash >> 16;
+            int roll = (int)(hash % 1000u);
+            if (y < 18 && roll < 5) return BlockType.DiamondOre;
+            if (y < 28 && roll < 18) return BlockType.GoldOre;
+            if (y < 42 && roll < 55) return BlockType.IronOre;
+            if (roll < 115) return BlockType.CoalOre;
+            if (roll < 175) return BlockType.Gravel;
+            return BlockType.Stone;
         }
 
         public void MarkChunkDirty(Vector3Int worldPosition)
