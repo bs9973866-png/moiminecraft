@@ -5,8 +5,8 @@ const JUMP_VELOCITY := 5.2
 const LOOK_SENSITIVITY := 0.004
 const REACH := 6.0
 
-var world: Node
-var hud: Node
+var world: Variant
+var hud: Variant
 var mobile_move := Vector2.ZERO
 var look_pitch := 0.0
 var camera: Camera3D
