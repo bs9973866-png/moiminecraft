@@ -11,7 +11,7 @@ namespace NovaCraft.World
             QualitySettings.shadows = ShadowQuality.Disable;
             QualitySettings.antiAliasing = 0;
             var player = new GameObject("Player");
-            player.transform.position = new Vector3(8, 40, 8);
+            player.transform.position = new Vector3(8, 70, 8);
             var controller = player.AddComponent<CharacterController>();
             controller.height = 1.8f;
             controller.radius = 0.32f;
