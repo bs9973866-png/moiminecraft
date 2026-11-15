@@ -77,7 +77,7 @@ namespace NovaCraft.World
             result.SetVertices(vertices);
             result.SetTriangles(triangles, 0, true);
             result.SetColors(colors);
-            if (vertices.Count > 0) result.RecalculateNormals();
+            // Both voxel materials are unlit; skipping normal generation saves CPU time on mobile.
             return result;
         }
 
