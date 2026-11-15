@@ -217,7 +217,7 @@ namespace NovaCraft.World
             int toolSlot = selectedSlot;
             BlockType tool = slotCounts[toolSlot] > 0 ? slotTypes[toolSlot] : BlockType.Air;
             if (RequiresPickaxe(block) && !CanMineWith(tool, block)) return;
-            if (world.SetBlock(cell, BlockType.Air))
+            if (world.SetPlayerBlock(cell, BlockType.Air))
             {
                 AddItem(block, 1);
                 if (IsTool(tool) && IsPickaxeTarget(block)) UseTool(toolSlot);
@@ -238,7 +238,7 @@ namespace NovaCraft.World
             Vector3 center = new Vector3(cell.x + 0.5f, cell.y + 0.5f, cell.z + 0.5f);
             if (Vector3.Distance(center, transform.position + Vector3.up * 0.9f) < 1.15f) return;
 
-            if (world.SetBlock(cell, type))
+            if (world.SetPlayerBlock(cell, type))
             {
                 slotCounts[selectedSlot]--;
                 if (slotCounts[selectedSlot] <= 0) SetSlot(selectedSlot, BlockType.Air, 0);
