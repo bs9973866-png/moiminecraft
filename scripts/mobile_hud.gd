@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-var player: Node
+var player: Variant
 var root: Control
 
 func _ready() -> void:
