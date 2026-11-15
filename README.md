@@ -27,7 +27,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 ## Controls
 
 - Editor: WASD + mouse look, Space to jump.
-- Touch prototype: left half moves; drag on the right half looks around.
+- Touch: left half moves, drag on the right half looks around; BREAK and PLACE edit targeted blocks; tap a hotbar slot to select a block; JUMP requests a jump.
 
 ## Performance notes
 
