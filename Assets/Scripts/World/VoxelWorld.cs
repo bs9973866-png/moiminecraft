@@ -18,6 +18,7 @@ namespace NovaCraft.World
         private readonly Queue<Vector2Int> pending = new Queue<Vector2Int>();
         private readonly HashSet<Vector2Int> queued = new HashSet<Vector2Int>();
         private readonly HashSet<VoxelChunk> dirtyChunks = new HashSet<VoxelChunk>();
+        private FluidSimulation fluidSimulation;
         private float offsetX, offsetZ;
         private Vector2Int lastCenter = new Vector2Int(int.MinValue, int.MinValue);
         public Transform Player { set => player = value; }
@@ -39,8 +40,8 @@ namespace NovaCraft.World
                 Shader liquidShader = Shader.Find("NovaCraft/VoxelLiquid");
                 liquidMaterial = new Material(liquidShader);
             }
-            var fluids = gameObject.AddComponent<FluidSimulation>();
-            fluids.Initialize(this);
+            fluidSimulation = gameObject.AddComponent<FluidSimulation>();
+            fluidSimulation.Initialize(this);
             RefreshQueue();
             StartCoroutine(GenerateLoop());
         }
@@ -127,6 +128,7 @@ namespace NovaCraft.World
             VoxelChunk chunk = go.AddComponent<VoxelChunk>();
             chunk.Initialize(chunkMaterial, liquidMaterial);
 
+            var fluidSources = new List<Vector3Int>();
             for (int x = 0; x < VoxelChunk.Width; x++)
             for (int z = 0; z < VoxelChunk.Width; z++)
             {
@@ -162,11 +164,28 @@ namespace NovaCraft.World
                 // Sea-level water fills low terrain, forming shallow lakes and shorelines.
                 const int seaLevel = 27;
                 if (surface < seaLevel)
+                {
                     for (int wy = surface + 1; wy <= seaLevel; wy++)
                         chunk.SetBlock(x, wy, z, BlockType.Water);
+                    fluidSources.Add(new Vector3Int(worldX, seaLevel, worldZ));
+                }
+
+                // Rare underground air pockets with a lava spring.
+                float caveRoll = Mathf.PerlinNoise((worldX + offsetX + 1210f) * 0.13f, (worldZ + offsetZ - 330f) * 0.13f);
+                if (x >= 2 && x <= 13 && z >= 2 && z <= 13 && surface > 22 && caveRoll > 0.985f)
+                {
+                    for (int cx = -1; cx <= 1; cx++)
+                    for (int cz = -1; cz <= 1; cz++)
+                    for (int cy = 7; cy <= 9; cy++)
+                        chunk.SetBlock(x + cx, cy, z + cz, BlockType.Air);
+                    chunk.SetBlock(x, 7, z, BlockType.Lava);
+                    fluidSources.Add(new Vector3Int(worldX, 7, worldZ));
+                }
             }
             chunk.BuildMesh();
             chunks.Add(key, chunk);
+            foreach (Vector3Int source in fluidSources)
+                fluidSimulation.AddSource(source, GetBlock(source) == BlockType.Lava ? BlockType.Lava : BlockType.Water);
         }
 
         public BlockType GetBlock(Vector3Int worldPosition)
