@@ -41,7 +41,7 @@ namespace NovaCraft.World
             if (Application.isEditor)
             {
                 for (int i = 0; i < Hotbar.Length; i++)
-                    if (Input.GetKeyDown(KeyCode.Alpha1 + i)) selected = i;
+                    if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) selected = i;
                 if (Input.GetMouseButtonDown(0)) BreakTarget();
                 if (Input.GetMouseButtonDown(1)) PlaceBlock();
             }
