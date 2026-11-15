@@ -15,7 +15,14 @@ Shader "NovaCraft/VoxelLiquid"
             #include "UnityCG.cginc"
             struct appdata { float4 vertex : POSITION; fixed4 color : COLOR; };
             struct v2f { float4 vertex : SV_POSITION; fixed4 color : COLOR; };
-            v2f vert(appdata v) { v2f o; o.vertex = UnityObjectToClipPos(v.vertex); o.color = v.color; return o; }
+            v2f vert(appdata v) {
+                v2f o;
+                float wave = sin((v.vertex.x + v.vertex.z) * 2.0 + _Time.y * 1.7) * 0.018;
+                v.vertex.y += wave;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.color = v.color;
+                return o;
+            }
             fixed4 frag(v2f i) : SV_Target { return i.color; }
             ENDCG
         }
