@@ -6,6 +6,10 @@ namespace NovaCraft.World
         Grass = 1,
         Dirt = 2,
         Stone = 3,
-        Sand = 4
+        Sand = 4,
+        Water = 5,
+        Lava = 6,
+        Wood = 7,
+        Leaves = 8
     }
 }
