@@ -7,12 +7,16 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Seeded 16×64×16 chunk terrain.
 - Exposed-face mesh generation; no GameObject per voxel.
 - Chunk streaming with a per-frame generation budget and distant-chunk unloading.
-- Procedural forest patches with voxel trunks and leaf crowns.\n- Underground coal, iron, gold and diamond ore deposits with depth-based rarity.\n- Gravel deposits and bedrock floor.\n- Budgeted falling sand/gravel physics triggered by nearby block edits.
+- Procedural forest patches with voxel trunks and leaf crowns.
+- Underground coal, iron, gold and diamond ore deposits with depth-based rarity.
+- Gravel deposits and bedrock floor.
+- Budgeted falling sand/gravel physics triggered by nearby block edits.
 - Shallow sea-level lakes and shorelines.
 - Rare underground pockets with lava springs.
 - Separate transparent liquid mesh for water and lava.
 - Budgeted cellular-automata liquid flow: water ticks faster and spreads farther than lava; liquids fall first, then spread sideways.
 - Water/lava contact converts the contacted liquid cell into stone.
+- Touch-first block breaking and placing with a five-slot hotbar and simple block counts.
 - Solid terrain mesh collider excludes liquid geometry.
 
 ## Unity setup
@@ -26,8 +30,8 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 
 ## Controls
 
-- Editor: WASD + mouse look, Space to jump.
-- Touch: left half moves, drag on the right half looks around; BREAK and PLACE edit targeted blocks; tap a hotbar slot to select a block; JUMP requests a jump.
+- Editor: WASD + mouse look, Space to jump, left mouse breaks, right mouse places, number keys 1–5 select hotbar slots.
+- Android: left half moves; drag on the right half looks around; BREAK and PLACE edit the targeted block; tap a hotbar slot to select a block; JUMP requests a jump.
 
 ## Performance notes
 
@@ -35,6 +39,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Only exposed block faces are emitted.
 - Liquids use a separate transparent mesh and a capped simulation budget.
 - Flow simulation only processes queued active cells, not every world voxel.
+- Sand and gravel checks are queued near terrain edits instead of scanning the world.
 - Mesh colliders are built from solid geometry only.
 - This is an early prototype: profile on real Android hardware and tune chunk distance, simulation budget and transparency overdraw before release.
 
@@ -43,14 +48,14 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Liquids are grid-based gameplay fluids, not physically accurate fluid dynamics.
 - Fluid simulation currently updates loaded chunks only; unloaded-chunk fluid persistence is not implemented yet.
 - Liquid blocks currently render as shallow full-cell surfaces; per-cell fluid-height blending and waves are planned.
-- World edits and fluid state are not saved yet.
+- Block counts and world edits are not saved yet.
+- The touch UI is an initial prototype and needs device testing for different aspect ratios and safe areas.
 
 ## Roadmap
 
-1. Finish terrain and liquid simulation.
-2. Block breaking/placing and mobile hotbar.
-3. Inventory and crafting.
-4. Expand caves, add more biomes and structures.
-5. Main menu, settings, world saves and mod API.
+1. Improve caves and liquid surfaces.
+2. Add inventory screen, crafting and tools.
+3. Add world saves and more biomes/structures.
+4. Add main menu, settings and mod API.
 
 Original voxel sandbox prototype; not affiliated with Mojang or Microsoft.
