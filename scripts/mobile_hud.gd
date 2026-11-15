@@ -8,6 +8,7 @@ const HOTBAR_COUNT := 8
 var player: Variant
 var root: Control
 var inventory: Array[int] = []
+var item_counts: Array[int] = []
 var selected_slot := 0
 var inventory_panel: PanelContainer
 var inventory_grid: GridContainer
@@ -18,6 +19,8 @@ var held_axes: Dictionary = {}
 func _ready() -> void:
 	inventory.resize(SLOT_COUNT)
 	inventory.fill(0)
+	item_counts.resize(SLOT_COUNT)
+	item_counts.fill(0)
 	root = Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -132,13 +135,14 @@ func _set_move_axis(axis: Vector2, pressed: bool) -> void:
 
 func add_block(block_type: int) -> void:
 	for i in range(SLOT_COUNT):
-		if inventory[i] == block_type:
-			inventory[i] += 1
+		if inventory[i] == block_type and item_counts[i] < 64:
+			item_counts[i] += 1
 			_refresh_inventory()
 			return
 	for i in range(SLOT_COUNT):
 		if inventory[i] == 0:
 			inventory[i] = block_type
+			item_counts[i] = 1
 			_refresh_inventory()
 			return
 
@@ -149,8 +153,9 @@ func get_selected_block() -> int:
 
 func remove_selected_block() -> void:
 	if get_selected_block() != 0:
-		inventory[selected_slot] -= 1
-		if inventory[selected_slot] <= 0:
+		item_counts[selected_slot] -= 1
+		if item_counts[selected_slot] <= 0:
+			item_counts[selected_slot] = 0
 			inventory[selected_slot] = 0
 		_refresh_inventory()
 
@@ -166,7 +171,7 @@ func _refresh_inventory() -> void:
 	for i in range(slot_buttons.size()):
 		var block_type := inventory[i]
 		var title := "Пусто" if block_type == 0 else BLOCK_NAMES.get(block_type, "Блок")
-		slot_buttons[i].text = "%02d\n%s\n×%d" % [i + 1, title, 0 if block_type == 0 else 1]
+		slot_buttons[i].text = "%02d\n%s\n×%d" % [i + 1, title, item_counts[i]]
 		if i == selected_slot:
 			slot_buttons[i].add_theme_stylebox_override("normal", _button_style(Color(0.30, 0.34, 0.52, 1.0)))
 		else:
