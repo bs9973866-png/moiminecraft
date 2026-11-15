@@ -67,7 +67,13 @@ namespace NovaCraft.World
             }
             else
             {
-                for (int i = 0; i < Input.touchCount; i++)
+                MobileVoxelInteraction inventory = GetComponent<MobileVoxelInteraction>();
+                if (inventory != null && inventory.InventoryOpen)
+                {
+                    move = Vector2.zero;
+                    look = Vector2.zero;
+                }
+                else for (int i = 0; i < Input.touchCount; i++)
                 {
                     Touch touch = Input.GetTouch(i);
                     if (touch.position.x < Screen.width * 0.45f)
