@@ -208,8 +208,11 @@ namespace NovaCraft.World
             if (!chunks.TryGetValue(new Vector2Int(cx, cz), out VoxelChunk chunk)) return false;
             int lx = worldPosition.x - cx * VoxelChunk.Width;
             int lz = worldPosition.z - cz * VoxelChunk.Width;
+            BlockType previous = chunk.GetBlock(lx, worldPosition.y, lz);
             chunk.SetBlock(lx, worldPosition.y, lz, type);
             dirtyChunks.Add(chunk);
+            if (fallingSimulation != null && previous != type)
+                fallingSimulation.NotifyChanged(worldPosition);
             return true;
         }
 
