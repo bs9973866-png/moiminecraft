@@ -134,7 +134,7 @@ namespace NovaCraft.World
             Vector3 point = targetHit.point - targetHit.normal * 0.015f;
             Vector3Int cell = new Vector3Int(Mathf.FloorToInt(point.x), Mathf.FloorToInt(point.y), Mathf.FloorToInt(point.z));
             BlockType block = world.GetBlock(cell);
-            if (block == BlockType.Air || block == BlockType.Bedrock) return;
+            if (block == BlockType.Air || block == BlockType.Bedrock || !HasCapacity(block, 1)) return;
             int toolSlot = selectedSlot;
             BlockType tool = slotCounts[toolSlot] > 0 ? slotTypes[toolSlot] : BlockType.Air;
             if (RequiresPickaxe(block) && !CanMineWith(tool, block)) return;
@@ -203,8 +203,7 @@ namespace NovaCraft.World
             if (tool == BlockType.WoodenPickaxe)
                 return block == BlockType.Stone || block == BlockType.CoalOre;
             if (tool == BlockType.StonePickaxe)
-                return block == BlockType.Stone || block == BlockType.CoalOre ||
-                       block == BlockType.IronOre || block == BlockType.GoldOre;
+                return block == BlockType.Stone || block == BlockType.CoalOre || block == BlockType.IronOre;
             return tool == BlockType.IronPickaxe;
         }
 
