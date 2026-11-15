@@ -160,14 +160,30 @@ namespace NovaCraft.World
             return type != BlockType.Air && type != BlockType.Water && type != BlockType.Lava && type != BlockType.Bedrock;
         }
 
+        private bool HasCapacity(BlockType type, int amount)
+        {
+            int capacity = 0;
+            for (int i = 0; i < InventorySize; i++)
+            {
+                if (slotCounts[i] == 0) capacity += StackLimit;
+                else if (slotTypes[i] == type) capacity += StackLimit - slotCounts[i];
+                if (capacity >= amount) return true;
+            }
+            return false;
+        }
+
         private void CraftPlanks()
         {
-            if (Consume(BlockType.Wood, 1)) AddItem(BlockType.Planks, 4);
+            if (HasItems(BlockType.Wood, 1) && HasCapacity(BlockType.Planks, 4) &&
+                Consume(BlockType.Wood, 1))
+                AddItem(BlockType.Planks, 4);
         }
 
         private void CraftWorkbench()
         {
-            if (Consume(BlockType.Planks, 4)) AddItem(BlockType.CraftingTable, 1);
+            if (HasItems(BlockType.Planks, 4) && HasCapacity(BlockType.CraftingTable, 1) &&
+                Consume(BlockType.Planks, 4))
+                AddItem(BlockType.CraftingTable, 1);
         }
 
         private void SelectOrMoveSlot(int index)
