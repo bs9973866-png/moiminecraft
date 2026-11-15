@@ -19,7 +19,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Touch-first block breaking and placing with a five-slot hotbar and a 24-slot stack inventory.
 - Mobile inventory screen with tap-to-select, stack merging and slot swapping.
 - Starter crafting recipes: one log makes four planks; two planks make four sticks; four planks make a crafting table; three planks/stone/iron ore plus two sticks make a pickaxe.
-- Wooden, stone and iron pickaxes have individual durability; mining stone and ores requires a suitable pickaxe tier.
+- Wooden, stone and iron pickaxes have individual durability; wooden mines stone/coal, stone mines stone/coal/iron, and iron mines all current ores.
 - Solid terrain mesh collider excludes liquid geometry.
 
 ## Unity setup
