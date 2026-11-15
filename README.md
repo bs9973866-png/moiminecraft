@@ -2,39 +2,54 @@
 
 A mobile-first voxel sandbox prototype built with Unity and C#.
 
-## Current milestone: procedural terrain foundation
+## Current milestone
 
-- Deterministic seeded terrain using Unity Perlin noise.
-- 16×64×16 chunks with exposed-face mesh generation (no GameObject per block).
-- One shared material and vertex colors to keep draw calls low.
-- Mesh colliders generated per chunk.
-- Configurable render distance and chunk generation budget.
-- Runtime bootstrap for a first playable terrain prototype.
+- Seeded 16×64×16 chunk terrain.
+- Exposed-face mesh generation; no GameObject per voxel.
+- Chunk streaming with a per-frame generation budget and distant-chunk unloading.
+- Procedural forest patches with voxel trunks and leaf crowns.
+- Shallow sea-level lakes and shorelines.
+- Separate transparent liquid mesh for water and lava.
+- Budgeted cellular-automata liquid flow: water ticks faster and spreads farther than lava; liquids fall first, then spread sideways.
+- Water/lava contact converts the contacted liquid cell into stone.
+- Solid terrain mesh collider excludes liquid geometry.
 
 ## Unity setup
 
-1. Create/open a Unity 3D project (Unity 2022.3 LTS or newer).
-2. Copy this repository's `Assets` folder into the project.
-3. Open an empty scene and add an empty GameObject named `World`.
-4. Add the `WorldBootstrap` component from `Assets/Scripts/World/WorldBootstrap.cs`.
-5. Press Play. The bootstrap creates a player camera, basic movement and nearby terrain.
-6. For Android, switch Build Settings to Android and configure the required Android SDK/NDK/JDK in Unity Hub.
+1. Create/open a Unity 2022.3 LTS (or newer) 3D project.
+2. Copy the repository's `Assets` folder into the project.
+3. Open an empty scene and add an empty GameObject.
+4. Add `WorldBootstrap` from `Assets/Scripts/World/WorldBootstrap.cs`.
+5. Press Play. The bootstrap creates a player, camera and nearby terrain.
+6. Configure Android SDK/NDK/JDK in Unity Hub before building for Android.
 
 ## Controls
 
 - Editor: WASD + mouse look, Space to jump.
-- Touch prototype: left side moves; drag on the right side looks around.
+- Touch prototype: left half moves; drag on the right half looks around.
 
-## Performance design
+## Performance notes
 
-Chunks are meshed as a single mesh and only faces next to air are emitted. The world does not create an individual Unity object for every voxel. Chunk count, view distance and generation budget are configurable. The first milestone disables real-time shadows and uses a shared material. Profile on actual devices before increasing view distance.
+- Chunk meshes combine many voxel faces into a small number of renderers.
+- Only exposed block faces are emitted.
+- Liquids use a separate transparent mesh and a capped simulation budget.
+- Flow simulation only processes queued active cells, not every world voxel.
+- Mesh colliders are built from solid geometry only.
+- This is an early prototype: profile on real Android hardware and tune chunk distance, simulation budget and transparency overdraw before release.
+
+## Known prototype limits
+
+- Liquids are grid-based gameplay fluids, not physically accurate fluid dynamics.
+- Fluid simulation currently updates loaded chunks only; unloaded-chunk fluid persistence is not implemented yet.
+- Liquid blocks currently render as shallow full-cell surfaces; per-cell fluid-height blending and waves are planned.
+- World edits and fluid state are not saved yet.
 
 ## Roadmap
 
-1. Terrain, chunk streaming and mobile controls.
-2. Block breaking/placing and hotbar.
+1. Finish terrain and liquid simulation.
+2. Block breaking/placing and mobile hotbar.
 3. Inventory and crafting.
-4. Trees, caves, ores, structures and biomes.
+4. Caves, ores, more biomes and structures.
 5. Main menu, settings, world saves and mod API.
 
-This is an original voxel sandbox prototype and is not affiliated with Mojang or Microsoft.
+Original voxel sandbox prototype; not affiliated with Mojang or Microsoft.
