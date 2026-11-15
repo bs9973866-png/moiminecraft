@@ -17,6 +17,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Budgeted cellular-automata liquid flow: water ticks faster and spreads farther than lava; liquids fall first, then spread sideways.
 - Water/lava contact converts the contacted liquid cell into stone.
 - Touch-first block breaking and placing with a five-slot hotbar and a 24-slot stack inventory.
+- Inventory contents, hotbar selection, tool durability and player-made block edits are saved locally with PlayerPrefs; world edits are separated by world seed and restored when chunks load.
 - Mobile inventory screen with tap-to-select, stack merging and slot swapping.
 - Starter crafting recipes: one log makes four planks; two planks make four sticks; four planks make a crafting table; three planks/stone/iron ore plus two sticks make a pickaxe.
 - Wooden, stone and iron pickaxes have individual durability; wooden mines stone/coal, stone mines stone/coal/iron, and iron mines all current ores.
@@ -51,7 +52,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Liquids are grid-based gameplay fluids, not physically accurate fluid dynamics.
 - Fluid simulation currently updates loaded chunks only; unloaded-chunk fluid persistence is not implemented yet.
 - Liquid blocks currently render as shallow full-cell surfaces; per-cell fluid-height blending and waves are planned.
-- Inventory, crafting results and world edits are not saved yet.
+- Fluid simulation state and unloaded-chunk liquid flow are not saved; only player-made block edits are persisted. The touch UI still needs device testing.
 - The touch UI is an initial prototype and needs device testing for different aspect ratios and safe areas.
 
 ## Roadmap
