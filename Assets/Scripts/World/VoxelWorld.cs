@@ -12,12 +12,16 @@ namespace NovaCraft.World
         [SerializeField, Range(1, 2)] private int chunksPerFrame = 1;
         [SerializeField] private Transform player;
         [SerializeField] private Material chunkMaterial;
+        [SerializeField] private Material liquidMaterial;
+
         private readonly Dictionary<Vector2Int, VoxelChunk> chunks = new Dictionary<Vector2Int, VoxelChunk>();
         private readonly Queue<Vector2Int> pending = new Queue<Vector2Int>();
         private readonly HashSet<Vector2Int> queued = new HashSet<Vector2Int>();
+        private readonly HashSet<VoxelChunk> dirtyChunks = new HashSet<VoxelChunk>();
         private float offsetX, offsetZ;
         private Vector2Int lastCenter = new Vector2Int(int.MinValue, int.MinValue);
         public Transform Player { set => player = value; }
+        public int Seed => seed;
 
         private void Start()
         {
@@ -30,6 +34,13 @@ namespace NovaCraft.World
                 if (shader == null) shader = Shader.Find("Unlit/Color");
                 chunkMaterial = new Material(shader);
             }
+            if (liquidMaterial == null)
+            {
+                Shader liquidShader = Shader.Find("NovaCraft/VoxelLiquid");
+                liquidMaterial = new Material(liquidShader);
+            }
+            var fluids = gameObject.AddComponent<FluidSimulation>();
+            fluids.Initialize(this);
             RefreshQueue();
             StartCoroutine(GenerateLoop());
         }
@@ -99,6 +110,11 @@ namespace NovaCraft.World
                     count++;
                     yield return null;
                 }
+                if (dirtyChunks.Count > 0)
+                {
+                    foreach (var chunk in dirtyChunks) if (chunk != null) chunk.BuildMesh();
+                    dirtyChunks.Clear();
+                }
                 yield return null;
             }
         }
@@ -109,7 +125,8 @@ namespace NovaCraft.World
             go.transform.SetParent(transform, false);
             go.transform.position = new Vector3(key.x * VoxelChunk.Width, 0, key.y * VoxelChunk.Width);
             VoxelChunk chunk = go.AddComponent<VoxelChunk>();
-            chunk.Initialize(chunkMaterial);
+            chunk.Initialize(chunkMaterial, liquidMaterial);
+
             for (int x = 0; x < VoxelChunk.Width; x++)
             for (int z = 0; z < VoxelChunk.Width; z++)
             {
@@ -123,9 +140,63 @@ namespace NovaCraft.World
                     BlockType type = y == surface ? BlockType.Grass : y >= surface - 3 ? BlockType.Dirt : BlockType.Stone;
                     chunk.SetBlock(x, y, z, type);
                 }
+
+                // Deterministic small forest patches; trees stay inside their owning chunk.
+                float forest = Mathf.PerlinNoise((worldX + offsetX + 430f) * 0.045f, (worldZ + offsetZ - 900f) * 0.045f);
+                float treeRoll = Mathf.PerlinNoise((worldX + offsetX + 810f) * 0.71f, (worldZ + offsetZ + 250f) * 0.71f);
+                if (x >= 2 && x <= 13 && z >= 2 && z <= 13 && surface > 27 && forest > 0.52f && treeRoll > 0.82f)
+                {
+                    int trunkHeight = 4 + Mathf.FloorToInt(treeRoll * 3f);
+                    for (int ty = 1; ty <= trunkHeight; ty++) chunk.SetBlock(x, surface + ty, z, BlockType.Wood);
+                    int crownY = surface + trunkHeight;
+                    for (int lx = -2; lx <= 2; lx++)
+                    for (int lz = -2; lz <= 2; lz++)
+                    for (int ly = -1; ly <= 2; ly++)
+                    {
+                        if (Mathf.Abs(lx) + Mathf.Abs(lz) + Mathf.Abs(ly) > 5) continue;
+                        if (chunk.GetBlock(x + lx, crownY + ly, z + lz) == BlockType.Air)
+                            chunk.SetBlock(x + lx, crownY + ly, z + lz, BlockType.Leaves);
+                    }
+                }
+
+                // Sea-level water fills low terrain, forming shallow lakes and shorelines.
+                const int seaLevel = 27;
+                if (surface < seaLevel)
+                    for (int wy = surface + 1; wy <= seaLevel; wy++)
+                        chunk.SetBlock(x, wy, z, BlockType.Water);
             }
             chunk.BuildMesh();
             chunks.Add(key, chunk);
+        }
+
+        public BlockType GetBlock(Vector3Int worldPosition)
+        {
+            int cx = Mathf.FloorToInt(worldPosition.x / (float)VoxelChunk.Width);
+            int cz = Mathf.FloorToInt(worldPosition.z / (float)VoxelChunk.Width);
+            if (!chunks.TryGetValue(new Vector2Int(cx, cz), out VoxelChunk chunk)) return BlockType.Air;
+            int lx = worldPosition.x - cx * VoxelChunk.Width;
+            int lz = worldPosition.z - cz * VoxelChunk.Width;
+            return chunk.GetBlock(lx, worldPosition.y, lz);
+        }
+
+        public bool SetBlock(Vector3Int worldPosition, BlockType type)
+        {
+            if (worldPosition.y < 0 || worldPosition.y >= VoxelChunk.Height) return false;
+            int cx = Mathf.FloorToInt(worldPosition.x / (float)VoxelChunk.Width);
+            int cz = Mathf.FloorToInt(worldPosition.z / (float)VoxelChunk.Width);
+            if (!chunks.TryGetValue(new Vector2Int(cx, cz), out VoxelChunk chunk)) return false;
+            int lx = worldPosition.x - cx * VoxelChunk.Width;
+            int lz = worldPosition.z - cz * VoxelChunk.Width;
+            chunk.SetBlock(lx, worldPosition.y, lz, type);
+            dirtyChunks.Add(chunk);
+            return true;
+        }
+
+        public void MarkChunkDirty(Vector3Int worldPosition)
+        {
+            int cx = Mathf.FloorToInt(worldPosition.x / (float)VoxelChunk.Width);
+            int cz = Mathf.FloorToInt(worldPosition.z / (float)VoxelChunk.Width);
+            if (chunks.TryGetValue(new Vector2Int(cx, cz), out VoxelChunk chunk)) dirtyChunks.Add(chunk);
         }
     }
 }
