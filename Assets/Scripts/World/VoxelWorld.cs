@@ -38,6 +38,8 @@ namespace NovaCraft.World
             if (liquidMaterial == null)
             {
                 Shader liquidShader = Shader.Find("NovaCraft/VoxelLiquid");
+                if (liquidShader == null) liquidShader = Shader.Find("Unlit/Transparent");
+                if (liquidShader == null) liquidShader = Shader.Find("Unlit/Color");
                 liquidMaterial = new Material(liquidShader);
             }
             fluidSimulation = gameObject.AddComponent<FluidSimulation>();
