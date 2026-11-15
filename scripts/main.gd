@@ -17,7 +17,7 @@ func _ready() -> void:
 
 	var player = PlayerScript.new()
 	player.name = "Player"
-	player.position = Vector3(24.0, 23.0, 24.0)
+	player.position = world.get_spawn_position() + Vector3(0.0, 1.5, 0.0)
 	add_child(player)
 	player.world = world
 
@@ -39,8 +39,8 @@ func _load_game() -> void:
 		push_warning("NovaCraft: не удалось открыть сохранение")
 		return
 	var parsed = JSON.parse_string(file.get_as_text())
-	if not parsed is Dictionary:
-		push_warning("NovaCraft: файл сохранения повреждён")
+	if not parsed is Dictionary or int(parsed.get("version", 0)) < 2:
+		push_warning("NovaCraft: старое сохранение пропущено, создан новый мир")
 		return
 	is_loading = true
 	if parsed.has("world") and parsed["world"] is Array:
@@ -53,7 +53,7 @@ func _save_game() -> void:
 	if is_loading or not is_instance_valid(world) or not is_instance_valid(hud):
 		return
 	var data := {
-		"version": 1,
+		"version": 2,
 		"world": world.serialize_blocks(),
 		"inventory": hud.serialize_inventory()
 	}
