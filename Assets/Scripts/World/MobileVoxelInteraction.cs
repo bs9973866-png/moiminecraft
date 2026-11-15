@@ -15,6 +15,7 @@ namespace NovaCraft.World
 
         private readonly BlockType[] slotTypes = new BlockType[InventorySize];
         private readonly int[] slotCounts = new int[InventorySize];
+        private readonly int[] toolDurability = new int[InventorySize];
         private Camera playerCamera;
         private VoxelWorld world;
         private int selectedSlot;
@@ -78,7 +79,9 @@ namespace NovaCraft.World
         {
             if (index < 0 || index >= InventorySize) return;
             slotTypes[index] = amount > 0 ? type : BlockType.Air;
-            slotCounts[index] = Mathf.Clamp(amount, 0, StackLimit);
+            slotCounts[index] = Mathf.Clamp(amount, 0, ItemMaxStack(type));
+            if (amount > 0 && IsTool(type) && toolDurability[index] <= 0) toolDurability[index] = MaxDurability(type);
+            if (amount <= 0) toolDurability[index] = 0;
         }
 
         private int CountItem(BlockType type)
@@ -110,15 +113,15 @@ namespace NovaCraft.World
             if (type == BlockType.Air || amount <= 0) return amount;
             for (int i = 0; i < InventorySize && amount > 0; i++)
             {
-                if (slotTypes[i] != type || slotCounts[i] >= StackLimit) continue;
-                int add = Mathf.Min(StackLimit - slotCounts[i], amount);
+                if (slotTypes[i] != type || slotCounts[i] >= ItemMaxStack(type)) continue;
+                int add = Mathf.Min(ItemMaxStack(type) - slotCounts[i], amount);
                 slotCounts[i] += add;
                 amount -= add;
             }
             for (int i = 0; i < InventorySize && amount > 0; i++)
             {
                 if (slotCounts[i] != 0) continue;
-                int add = Mathf.Min(StackLimit, amount);
+                int add = Mathf.Min(ItemMaxStack(type), amount);
                 SetSlot(i, type, add);
                 amount -= add;
             }
@@ -132,7 +135,14 @@ namespace NovaCraft.World
             Vector3Int cell = new Vector3Int(Mathf.FloorToInt(point.x), Mathf.FloorToInt(point.y), Mathf.FloorToInt(point.z));
             BlockType block = world.GetBlock(cell);
             if (block == BlockType.Air || block == BlockType.Bedrock) return;
-            if (world.SetBlock(cell, BlockType.Air)) AddItem(block, 1);
+            int toolSlot = selectedSlot;
+            BlockType tool = slotCounts[toolSlot] > 0 ? slotTypes[toolSlot] : BlockType.Air;
+            if (RequiresPickaxe(block) && !CanMineWith(tool, block)) return;
+            if (world.SetBlock(cell, BlockType.Air))
+            {
+                AddItem(block, 1);
+                if (IsTool(tool) && IsPickaxeTarget(block)) UseTool(toolSlot);
+            }
         }
 
         private void PlaceBlock()
@@ -157,16 +167,62 @@ namespace NovaCraft.World
 
         private static bool CanPlace(BlockType type)
         {
-            return type != BlockType.Air && type != BlockType.Water && type != BlockType.Lava && type != BlockType.Bedrock;
+            return type != BlockType.Air && type != BlockType.Water && type != BlockType.Lava &&
+                   type != BlockType.Bedrock && type != BlockType.Stick && !IsTool(type);
+        }
+
+        private static bool IsTool(BlockType type)
+        {
+            return type == BlockType.WoodenPickaxe || type == BlockType.StonePickaxe || type == BlockType.IronPickaxe;
+        }
+
+        private static bool IsPickaxeTarget(BlockType type)
+        {
+            return type == BlockType.Stone || type == BlockType.CoalOre || type == BlockType.IronOre ||
+                   type == BlockType.GoldOre || type == BlockType.DiamondOre;
+        }
+
+        private static bool RequiresPickaxe(BlockType type) => IsPickaxeTarget(type);
+
+        private static int ItemMaxStack(BlockType type) => IsTool(type) ? 1 : StackLimit;
+
+        private static int MaxDurability(BlockType type)
+        {
+            switch (type)
+            {
+                case BlockType.WoodenPickaxe: return 59;
+                case BlockType.StonePickaxe: return 131;
+                case BlockType.IronPickaxe: return 250;
+                default: return 0;
+            }
+        }
+
+        private static bool CanMineWith(BlockType tool, BlockType block)
+        {
+            if (!IsPickaxeTarget(block)) return true;
+            if (tool == BlockType.WoodenPickaxe)
+                return block == BlockType.Stone || block == BlockType.CoalOre;
+            if (tool == BlockType.StonePickaxe)
+                return block == BlockType.Stone || block == BlockType.CoalOre ||
+                       block == BlockType.IronOre || block == BlockType.GoldOre;
+            return tool == BlockType.IronPickaxe;
+        }
+
+        private void UseTool(int index)
+        {
+            if (index < 0 || index >= InventorySize || !IsTool(slotTypes[index])) return;
+            toolDurability[index] = Mathf.Max(0, toolDurability[index] - 1);
+            if (toolDurability[index] == 0) SetSlot(index, BlockType.Air, 0);
         }
 
         private bool HasCapacity(BlockType type, int amount)
         {
             int capacity = 0;
+            int maxStack = ItemMaxStack(type);
             for (int i = 0; i < InventorySize; i++)
             {
-                if (slotCounts[i] == 0) capacity += StackLimit;
-                else if (slotTypes[i] == type) capacity += StackLimit - slotCounts[i];
+                if (slotCounts[i] == 0) capacity += maxStack;
+                else if (slotTypes[i] == type) capacity += maxStack - slotCounts[i];
                 if (capacity >= amount) return true;
             }
             return false;
@@ -186,6 +242,21 @@ namespace NovaCraft.World
                 AddItem(BlockType.CraftingTable, 1);
         }
 
+        private void CraftSticks()
+        {
+            if (HasItems(BlockType.Planks, 2) && HasCapacity(BlockType.Stick, 4) &&
+                Consume(BlockType.Planks, 2))
+                AddItem(BlockType.Stick, 4);
+        }
+
+        private void CraftPickaxe(BlockType material)
+        {
+            BlockType tool = material == BlockType.Planks ? BlockType.WoodenPickaxe :
+                material == BlockType.Stone ? BlockType.StonePickaxe : BlockType.IronPickaxe;
+            if (!HasItems(material, 3) || !HasItems(BlockType.Stick, 2) || !HasCapacity(tool, 1)) return;
+            if (Consume(material, 3) && Consume(BlockType.Stick, 2)) AddItem(tool, 1);
+        }
+
         private void SelectOrMoveSlot(int index)
         {
             if (movingSlot < 0)
@@ -201,9 +272,9 @@ namespace NovaCraft.World
                 return;
             }
 
-            if (slotCounts[index] > 0 && slotTypes[index] == slotTypes[movingSlot] && slotCounts[index] < StackLimit)
+            if (slotCounts[index] > 0 && slotTypes[index] == slotTypes[movingSlot] && slotCounts[index] < ItemMaxStack(slotTypes[index]))
             {
-                int transfer = Mathf.Min(StackLimit - slotCounts[index], slotCounts[movingSlot]);
+                int transfer = Mathf.Min(ItemMaxStack(slotTypes[index]) - slotCounts[index], slotCounts[movingSlot]);
                 slotCounts[index] += transfer;
                 slotCounts[movingSlot] -= transfer;
                 if (slotCounts[movingSlot] <= 0) SetSlot(movingSlot, BlockType.Air, 0);
@@ -212,8 +283,14 @@ namespace NovaCraft.World
             {
                 BlockType type = slotTypes[index];
                 int amount = slotCounts[index];
-                SetSlot(index, slotTypes[movingSlot], slotCounts[movingSlot]);
+                int durability = toolDurability[index];
+                BlockType movingType = slotTypes[movingSlot];
+                int movingAmount = slotCounts[movingSlot];
+                int movingDurability = toolDurability[movingSlot];
+                SetSlot(index, movingType, movingAmount);
+                toolDurability[index] = movingDurability;
                 SetSlot(movingSlot, type, amount);
+                toolDurability[movingSlot] = durability;
             }
 
             if (index < HotbarSize) selectedSlot = index;
@@ -242,7 +319,7 @@ namespace NovaCraft.World
             float y = Screen.height - slot - margin;
             for (int i = 0; i < HotbarSize; i++)
             {
-                string caption = (i + 1) + "\n" + (slotCounts[i] > 0 ? slotTypes[i].ToString() : "-") + "\n" + slotCounts[i];
+                string caption = (i + 1) + "\n" + (slotCounts[i] > 0 ? ShortName(slotTypes[i]) : "-") + "\n" + slotCounts[i] + (IsTool(slotTypes[i]) ? " / " + toolDurability[i] : "");
                 GUI.backgroundColor = i == selectedSlot ? new Color(0.35f, 0.75f, 1f) : new Color(0.22f, 0.24f, 0.30f);
                 if (GUI.Button(new Rect(startX + i * (slot + 5f * scale), y, slot, slot), caption, buttonStyle)) selectedSlot = i;
             }
@@ -294,18 +371,29 @@ namespace NovaCraft.World
                 Rect rect = new Rect(gridX + col * (cell + gap), gridTop + row * (cell + gap), cell, cell);
                 GUI.backgroundColor = i == movingSlot ? new Color(1f, 0.72f, 0.25f) :
                     (i == selectedSlot ? new Color(0.32f, 0.62f, 0.88f) : new Color(0.20f, 0.22f, 0.29f));
-                string name = slotCounts[i] > 0 ? ShortName(slotTypes[i]) + "\n" + slotCounts[i] : "-";
+                string name = slotCounts[i] > 0 ? ShortName(slotTypes[i]) + "\n" + slotCounts[i] + (IsTool(slotTypes[i]) ? "\n" + toolDurability[i] + "/" + MaxDurability(slotTypes[i]) : "") : "-";
                 if (GUI.Button(rect, name, buttonStyle)) SelectOrMoveSlot(i);
             }
             GUI.backgroundColor = Color.white;
 
             float recipeY = gridTop + 4f * (cell + gap) + 7f * scale;
-            float recipeHeight = Mathf.Max(34f * scale, panelHeight - (recipeY - y) - 12f * scale);
+            float recipeGap = 5f * scale;
+            float recipeHeight = Mathf.Max(28f * scale, (panelHeight - (recipeY - y) - 12f * scale - recipeGap) * 0.5f);
             float recipeWidth = (panelWidth - 3f * margin) * 0.5f;
+            float rightX = x + margin * 2f + recipeWidth;
             if (GUI.Button(new Rect(x + margin, recipeY, recipeWidth, recipeHeight),
-                "ДОСКИ\n1 дерево → 4 доски\nЕсть: " + CountItem(BlockType.Wood), buttonStyle)) CraftPlanks();
-            if (GUI.Button(new Rect(x + margin * 2f + recipeWidth, recipeY, recipeWidth, recipeHeight),
-                "ВЕРСТАК\n4 доски → 1 верстак\nЕсть: " + CountItem(BlockType.Planks), buttonStyle)) CraftWorkbench();
+                "ДОСКИ\n1 дерево → 4", buttonStyle)) CraftPlanks();
+            if (GUI.Button(new Rect(rightX, recipeY, recipeWidth, recipeHeight),
+                "ВЕРСТАК\n4 доски → 1", buttonStyle)) CraftWorkbench();
+            if (GUI.Button(new Rect(x + margin, recipeY + recipeHeight + recipeGap, recipeWidth, recipeHeight),
+                "ПАЛКИ\n2 доски → 4", buttonStyle)) CraftSticks();
+            if (GUI.Button(new Rect(rightX, recipeY + recipeHeight + recipeGap, recipeWidth, recipeHeight),
+                "КИРКА\n3 доски/камня/железа + 2 палки", buttonStyle))
+            {
+                if (HasItems(BlockType.Planks, 3)) CraftPickaxe(BlockType.Planks);
+                else if (HasItems(BlockType.Stone, 3)) CraftPickaxe(BlockType.Stone);
+                else CraftPickaxe(BlockType.IronOre);
+            }
         }
 
         private static string ShortName(BlockType type)
@@ -313,6 +401,10 @@ namespace NovaCraft.World
             switch (type)
             {
                 case BlockType.CraftingTable: return "Верстак";
+                case BlockType.Stick: return "Палка";
+                case BlockType.WoodenPickaxe: return "Дер. кирка";
+                case BlockType.StonePickaxe: return "Кам. кирка";
+                case BlockType.IronPickaxe: return "Жел. кирка";
                 case BlockType.Planks: return "Доски";
                 case BlockType.DiamondOre: return "Алмаз";
                 case BlockType.IronOre: return "Железо";
