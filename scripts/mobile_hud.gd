@@ -196,7 +196,7 @@ func toggle_inventory() -> void:
 func _refresh_inventory() -> void:
 	for i in range(slot_buttons.size()):
 		var block_type := inventory[i]
-		var title := "Пусто" if block_type == 0 else BLOCK_NAMES.get(block_type, "Блок")
+		var title: String = "Пусто" if block_type == 0 else str(BLOCK_NAMES.get(block_type, "Блок"))
 		slot_buttons[i].text = "%02d\n%s\n×%d" % [i + 1, title, item_counts[i]]
 		if i == selected_slot:
 			slot_buttons[i].add_theme_stylebox_override("normal", _button_style(Color(0.30, 0.34, 0.52, 1.0)))
