@@ -82,7 +82,12 @@ func _edit_target(placing: bool) -> void:
 		cell = Vector3i(floori(point.x + normal.x * 0.02), floori(point.y + normal.y * 0.02), floori(point.z + normal.z * 0.02))
 		if global_position.distance_to(Vector3(cell) + Vector3.ONE * 0.5) < 1.2:
 			return
-		world.place_block(cell)
+		if hud != null:
+			var selected_type: int = hud.get_selected_block()
+			if selected_type != 0 and world.place_block(cell, selected_type):
+				hud.remove_selected_block()
 	else:
 		cell = Vector3i(floori(point.x - normal.x * 0.02), floori(point.y - normal.y * 0.02), floori(point.z - normal.z * 0.02))
-		world.break_block(cell)
+		var removed_type: int = world.break_block(cell)
+		if removed_type != 0 and hud != null:
+			hud.add_block(removed_type)
