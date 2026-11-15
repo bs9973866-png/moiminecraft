@@ -91,9 +91,9 @@ func _add_visible_faces(st: SurfaceTool, cell: Vector3i, color: Color) -> void:
 	if get_block(cell + Vector3i.RIGHT) == BLOCK_AIR:
 		_quad(st, Vector3(x+1,y,z), Vector3(x+1,y+1,z), Vector3(x+1,y+1,z+1), Vector3(x+1,y,z+1), color.darkened(0.12))
 	if get_block(cell + Vector3i(0,0,-1)) == BLOCK_AIR:
-		_quad(st, Vector3(x+1,y,z), Vector3(x+1,y+1,z), Vector3(x,y+1,z), Vector3(x,y,z), color.darkened(0.08))
+		_quad(st, Vector3(x,y,z), Vector3(x,y+1,z), Vector3(x+1,y+1,z), Vector3(x+1,y,z), color.darkened(0.08))
 	if get_block(cell + Vector3i(0,0,1)) == BLOCK_AIR:
-		_quad(st, Vector3(x,y,z+1), Vector3(x,y+1,z+1), Vector3(x+1,y+1,z+1), Vector3(x+1,y,z+1), color.darkened(0.08))
+		_quad(st, Vector3(x,y,z+1), Vector3(x+1,y,z+1), Vector3(x+1,y+1,z+1), Vector3(x,y+1,z+1), color.darkened(0.08))
 
 func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, color: Color) -> void:
 	st.set_color(color)
