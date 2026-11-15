@@ -35,17 +35,20 @@ func _generate_world() -> void:
 func get_block(cell: Vector3i) -> int:
 	return int(blocks.get(cell, BLOCK_AIR))
 
-func break_block(cell: Vector3i) -> bool:
-	if get_block(cell) == BLOCK_AIR:
-		return false
+func break_block(cell: Vector3i) -> int:
+	var removed_type := get_block(cell)
+	if removed_type == BLOCK_AIR:
+		return BLOCK_AIR
 	blocks.erase(cell)
 	_rebuild_mesh()
-	return true
+	return removed_type
 
-func place_block(cell: Vector3i) -> bool:
+func place_block(cell: Vector3i, block_type: int = BLOCK_DIRT) -> bool:
 	if get_block(cell) != BLOCK_AIR or cell.y < 0 or cell.y >= MAX_HEIGHT:
 		return false
-	blocks[cell] = BLOCK_DIRT
+	if block_type <= BLOCK_AIR or block_type > BLOCK_STONE:
+		return false
+	blocks[cell] = block_type
 	_rebuild_mesh()
 	return true
 
