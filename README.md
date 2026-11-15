@@ -1,78 +1,38 @@
 # NovaCraft
 
-A mobile-first voxel sandbox prototype built with Unity and C#.
+**Active engine: Godot 4.5.1.** NovaCraft is being moved to Godot so Android APK builds can run in GitHub Actions without a Unity account or Unity license.
 
-## Current milestone
+## Current Godot port
 
-- Seeded 16×64×16 chunk terrain.
-- Exposed-face mesh generation; no GameObject per voxel.
-- Chunk streaming with a per-frame generation budget and distant-chunk unloading.
-- Procedural forest patches with voxel trunks and leaf crowns.
-- Underground coal, iron, gold and diamond ore deposits with depth-based rarity.
-- Gravel deposits and bedrock floor.
-- Budgeted falling sand/gravel physics triggered by nearby block edits.
-- Shallow sea-level lakes and shorelines.
-- Rare underground pockets with lava springs.
-- Separate transparent liquid mesh for water and lava.
-- Budgeted cellular-automata liquid flow: water ticks faster and spreads farther than lava; liquids fall first, then spread sideways.
-- Water/lava contact converts the contacted liquid cell into stone.
-- Touch-first block breaking and placing with a five-slot hotbar and a 24-slot stack inventory.
-- Inventory contents, hotbar selection, tool durability and player-made block edits are saved locally with PlayerPrefs; world edits are separated by world seed and restored when chunks load.
-- Mobile inventory screen with tap-to-select, stack merging and slot swapping.
-- Starter crafting recipes: one log makes four planks; two planks make four sticks; four planks make a crafting table; three planks/stone/iron ore plus two sticks make a pickaxe.
-- Wooden, stone and iron pickaxes have individual durability; wooden mines stone/coal, stone mines stone/coal/iron, and iron mines all current ores.
-- Solid terrain mesh collider excludes liquid geometry.
+- Android-first Godot project using the GL Compatibility renderer.
+- Procedural 48×48 voxel terrain with grass, dirt and stone.
+- Exposed-face mesh generation instead of one scene object per block.
+- Collision mesh for the terrain.
+- CharacterBody3D player with gravity, jumping, keyboard controls and touch look.
+- On-screen movement, jump, break and place controls.
+- Android ARM64 export preset and GitHub Actions APK workflow.
 
-## Unity setup
+This is the first migration slice, not a complete feature-for-feature port yet. The previous Unity implementation remains in `Assets/` as a reference while its world, inventory, crafting, fluids, falling blocks and save systems are ported into Godot.
 
-1. Create/open a Unity 2022.3 LTS (or newer) 3D project.
-2. Copy the repository's `Assets` folder into the project.
-3. Open an empty scene and add an empty GameObject.
-4. Add `WorldBootstrap` from `Assets/Scripts/World/WorldBootstrap.cs`.
-5. Press Play. The bootstrap creates a player, camera and nearby terrain.
-6. Configure Android SDK/NDK/JDK in Unity Hub before building for Android.
+## Build an Android APK
+
+1. Open **Actions → Build NovaCraft Android APK** in this repository.
+2. Select **Run workflow**.
+3. Wait for the workflow to finish.
+4. Download the `NovaCraft-Android-APK` artifact from the run summary.
+
+The Godot workflow does **not** need `UNITY_LICENSE`, `UNITY_EMAIL` or `UNITY_PASSWORD`. It uses Godot export templates and Android build tools in GitHub Actions.
 
 ## Controls
 
-- Editor: WASD + mouse look, Space to jump, left mouse breaks, right mouse places, number keys 1–5 select hotbar slots.
-- Android: left half moves; drag on the right half looks around; BREAK and PLACE edit the targeted block; tap a hotbar slot to select a block; JUMP requests a jump; INV opens the inventory. In the inventory, tap one slot and then another to move, swap or merge stacks. Crafted pickaxes are non-stackable and show remaining durability.
+- Android: left-side arrows move; drag on the right side to look; buttons on the right jump, break and place.
+- Keyboard: WASD / arrow keys move, Space jumps. Hold right mouse and move to look around.
 
-## Performance notes
+## Next migration milestones
 
-- Chunk meshes combine many voxel faces into a small number of renderers.
-- Only exposed block faces are emitted.
-- Liquids use a separate transparent mesh and a capped simulation budget.
-- Flow simulation only processes queued active cells, not every world voxel.
-- Sand and gravel checks are queued near terrain edits instead of scanning the world.
-- Mesh colliders are built from solid geometry only.
-- This is an early prototype: profile on real Android hardware and tune chunk distance, simulation budget and transparency overdraw before release.
+1. Port the 24-slot inventory, hotbar, item stacks and crafting.
+2. Port block mining rules, pickaxe durability and world edit saving.
+3. Add chunk streaming, trees, ores, caves, water and lava.
+4. Improve touch layout and performance on the target Android phone.
 
-## Known prototype limits
-
-- Liquids are grid-based gameplay fluids, not physically accurate fluid dynamics.
-- Fluid simulation currently updates loaded chunks only; unloaded-chunk fluid persistence is not implemented yet.
-- Liquid blocks currently render as shallow full-cell surfaces; per-cell fluid-height blending and waves are planned.
-- Fluid simulation state and unloaded-chunk liquid flow are not saved; only player-made block edits are persisted. The touch UI still needs device testing.
-- The touch UI is an initial prototype and needs device testing for different aspect ratios and safe areas.
-
-## Roadmap
-
-1. Improve caves and liquid surfaces.
-2. Add axes/shovels, mining progress, world saves and more crafting recipes.
-3. Add world saves and more biomes/structures.
-4. Add main menu, settings and mod API.
-
-Original voxel sandbox prototype; not affiliated with Mojang or Microsoft.
-
-## Android APK build
-
-The repository includes a GitHub Actions workflow at `.github/workflows/android-apk.yml`.
-It builds a 64-bit Android APK with Unity 2022.3.62f1 when manually started or when relevant project files are pushed to `main`.
-
-Before the first build, add these repository Actions secrets in **Settings → Secrets and variables → Actions**:
-
-- `UNITY_LICENSE` — Unity Personal/Pro license activation data in the format required by GameCI.
-- `UNITY_EMAIL` — the email for the Unity account.
-- `UNITY_PASSWORD` — the Unity account password.
-
-Then open **Actions → Build NovaCraft Android APK → Run workflow**. When the run succeeds, open its summary and download the `NovaCraft-Android-APK` artifact. The APK is a debug/testing build, not a Play Store release. Do not share Unity account credentials in chat or commit them to the repository.
+The Godot build is an early testing APK, not a Play Store release. NovaCraft is an independent voxel sandbox and is not affiliated with Mojang or Microsoft.
