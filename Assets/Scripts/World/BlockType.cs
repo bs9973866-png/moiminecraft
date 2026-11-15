@@ -18,6 +18,10 @@ namespace NovaCraft.World
         DiamondOre = 13,
         Bedrock = 14,
         Planks = 15,
-        CraftingTable = 16
+        CraftingTable = 16,
+        Stick = 17,
+        WoodenPickaxe = 18,
+        StonePickaxe = 19,
+        IronPickaxe = 20
     }
 }
