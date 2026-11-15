@@ -9,6 +9,7 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 - Chunk streaming with a per-frame generation budget and distant-chunk unloading.
 - Procedural forest patches with voxel trunks and leaf crowns.
 - Shallow sea-level lakes and shorelines.
+- Rare underground pockets with lava springs.
 - Separate transparent liquid mesh for water and lava.
 - Budgeted cellular-automata liquid flow: water ticks faster and spreads farther than lava; liquids fall first, then spread sideways.
 - Water/lava contact converts the contacted liquid cell into stone.
