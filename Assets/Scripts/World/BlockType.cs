@@ -10,6 +10,12 @@ namespace NovaCraft.World
         Water = 5,
         Lava = 6,
         Wood = 7,
-        Leaves = 8
+        Leaves = 8,
+        Gravel = 9,
+        CoalOre = 10,
+        IronOre = 11,
+        GoldOre = 12,
+        DiamondOre = 13,
+        Bedrock = 14
     }
 }
