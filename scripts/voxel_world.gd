@@ -12,6 +12,8 @@ var terrain_noise := FastNoiseLite.new()
 var terrain_body: StaticBody3D
 var terrain_mesh: ArrayMesh
 
+signal world_changed
+
 func _ready() -> void:
 	terrain_noise.seed = 481516
 	terrain_noise.frequency = 0.035
@@ -41,6 +43,7 @@ func break_block(cell: Vector3i) -> int:
 		return BLOCK_AIR
 	blocks.erase(cell)
 	_rebuild_mesh()
+	world_changed.emit()
 	return removed_type
 
 func place_block(cell: Vector3i, block_type: int = BLOCK_DIRT) -> bool:
@@ -50,7 +53,25 @@ func place_block(cell: Vector3i, block_type: int = BLOCK_DIRT) -> bool:
 		return false
 	blocks[cell] = block_type
 	_rebuild_mesh()
+	world_changed.emit()
 	return true
+
+func serialize_blocks() -> Array:
+	var result: Array = []
+	for cell_variant in blocks.keys():
+		var cell: Vector3i = cell_variant
+		result.append([cell.x, cell.y, cell.z, int(blocks[cell])])
+	return result
+
+func load_blocks(saved_blocks: Array) -> void:
+	blocks.clear()
+	for entry in saved_blocks:
+		if entry is Array and entry.size() == 4:
+			var cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
+			var block_type := int(entry[3])
+			if block_type > BLOCK_AIR and block_type <= BLOCK_STONE and cell.y >= 0 and cell.y < MAX_HEIGHT:
+				blocks[cell] = block_type
+	_rebuild_mesh()
 
 func _rebuild_mesh() -> void:
 	var surface_tool := SurfaceTool.new()
