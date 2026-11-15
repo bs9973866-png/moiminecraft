@@ -63,3 +63,16 @@ A mobile-first voxel sandbox prototype built with Unity and C#.
 4. Add main menu, settings and mod API.
 
 Original voxel sandbox prototype; not affiliated with Mojang or Microsoft.
+
+## Android APK build
+
+The repository includes a GitHub Actions workflow at `.github/workflows/android-apk.yml`.
+It builds a 64-bit Android APK with Unity 2022.3.62f1 when manually started or when relevant project files are pushed to `main`.
+
+Before the first build, add these repository Actions secrets in **Settings → Secrets and variables → Actions**:
+
+- `UNITY_LICENSE` — Unity Personal/Pro license activation data in the format required by GameCI.
+- `UNITY_EMAIL` — the email for the Unity account.
+- `UNITY_PASSWORD` — the Unity account password.
+
+Then open **Actions → Build NovaCraft Android APK → Run workflow**. When the run succeeds, open its summary and download the `NovaCraft-Android-APK` artifact. The APK is a debug/testing build, not a Play Store release. Do not share Unity account credentials in chat or commit them to the repository.
