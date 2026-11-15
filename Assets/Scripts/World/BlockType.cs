@@ -16,6 +16,8 @@ namespace NovaCraft.World
         IronOre = 11,
         GoldOre = 12,
         DiamondOre = 13,
-        Bedrock = 14
+        Bedrock = 14,
+        Planks = 15,
+        CraftingTable = 16
     }
 }
