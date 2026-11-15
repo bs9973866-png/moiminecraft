@@ -30,25 +30,26 @@ func _ready() -> void:
 	_build_controls()
 	_build_inventory()
 	get_viewport().size_changed.connect(_layout)
+	call_deferred("_layout")
 	_refresh_inventory()
 
 func _build_controls() -> void:
-	_add_hold_button("◀", Vector2.ZERO, Vector2(66, 66), Vector2(-1, 0), "left")
+	_add_hold_button("◀", Vector2.ZERO, Vector2(84, 84), Vector2(-1, 0), "left")
 	_add_hold_button("▶", Vector2.ZERO, Vector2(66, 66), Vector2(1, 0), "right")
 	_add_hold_button("▲", Vector2.ZERO, Vector2(66, 66), Vector2(0, -1), "forward")
 	_add_hold_button("▼", Vector2.ZERO, Vector2(66, 66), Vector2(0, 1), "back")
-	_add_action_button("ПРЫЖОК", Vector2.ZERO, Vector2(128, 54), func(): player.jump(), "jump")
+	_add_action_button("ПРЫЖОК", Vector2.ZERO, Vector2(156, 64), func(): player.jump(), "jump")
 	_add_action_button("ЛОМАТЬ", Vector2.ZERO, Vector2(128, 54), func(): player.break_target(), "break")
 	_add_action_button("СТАВИТЬ", Vector2.ZERO, Vector2(128, 54), func(): player.place_target(), "place")
-	_add_action_button("ИНВЕНТАРЬ", Vector2.ZERO, Vector2(128, 46), toggle_inventory, "inventory")
+	_add_action_button("ИНВЕНТАРЬ", Vector2.ZERO, Vector2(156, 56), toggle_inventory, "inventory")
 	var hint := Label.new()
 	hint.text = "Правая часть экрана — обзор"
-	hint.add_theme_font_size_override("font_size", 15)
+	hint.add_theme_font_size_override("font_size", 19)
 	hint.modulate = Color(1, 1, 1, 0.78)
 	hint.position = Vector2(18, 14)
 	root.add_child(hint)
 	hotbar_label = Label.new()
-	hotbar_label.add_theme_font_size_override("font_size", 16)
+	hotbar_label.add_theme_font_size_override("font_size", 20)
 	hotbar_label.add_theme_color_override("font_color", Color.WHITE)
 	root.add_child(hotbar_label)
 
@@ -56,7 +57,7 @@ func _add_hold_button(caption: String, _offset: Vector2, size: Vector2, axis: Ve
 	var button := Button.new()
 	button.text = caption
 	button.custom_minimum_size = size
-	button.add_theme_font_size_override("font_size", 25)
+	button.add_theme_font_size_override("font_size", 32)
 	button.add_theme_color_override("font_color", Color.WHITE)
 	button.add_theme_stylebox_override("normal", _button_style(Color(0.10, 0.12, 0.18, 0.78)))
 	button.add_theme_stylebox_override("pressed", _button_style(Color(0.28, 0.48, 0.70, 0.95)))
@@ -80,7 +81,7 @@ func _add_action_button(caption: String, _offset: Vector2, size: Vector2, callba
 func _build_inventory() -> void:
 	inventory_panel = PanelContainer.new()
 	inventory_panel.visible = false
-	inventory_panel.custom_minimum_size = Vector2(420, 300)
+	inventory_panel.custom_minimum_size = Vector2(500, 360)
 	inventory_panel.add_theme_stylebox_override("panel", _button_style(Color(0.055, 0.07, 0.11, 0.96)))
 	root.add_child(inventory_panel)
 	var outer := VBoxContainer.new()
@@ -98,8 +99,8 @@ func _build_inventory() -> void:
 	outer.add_child(inventory_grid)
 	for i in range(SLOT_COUNT):
 		var slot := Button.new()
-		slot.custom_minimum_size = Vector2(58, 48)
-		slot.add_theme_font_size_override("font_size", 14)
+		slot.custom_minimum_size = Vector2(70, 58)
+		slot.add_theme_font_size_override("font_size", 17)
 		slot.add_theme_color_override("font_color", Color.WHITE)
 		slot.add_theme_stylebox_override("normal", _button_style(Color(0.13, 0.15, 0.22, 0.96)))
 		slot.pressed.connect(func(): _select_slot(i))
@@ -220,11 +221,11 @@ func _layout() -> void:
 				"right": child.position = Vector2(162, size.y - 160)
 				"forward": child.position = Vector2(92, size.y - 230)
 				"back": child.position = Vector2(92, size.y - 90)
-				"jump": child.position = Vector2(size.x - 150, size.y - 220)
-				"break": child.position = Vector2(size.x - 150, size.y - 154)
-				"place": child.position = Vector2(size.x - 150, size.y - 88)
-				"inventory": child.position = Vector2(size.x - 150, size.y - 32)
+				"jump": child.position = Vector2(size.x - 176, size.y - 260)
+				"break": child.position = Vector2(size.x - 176, size.y - 184)
+				"place": child.position = Vector2(size.x - 176, size.y - 108)
+				"inventory": child.position = Vector2(size.x - 176, size.y - 62)
 		if child == hotbar_label:
 			hotbar_label.position = Vector2(maxf(250.0, size.x * 0.5 - 180.0), size.y - 54)
 	if inventory_panel != null:
-		inventory_panel.position = Vector2(size.x * 0.5 - 210.0, size.y * 0.5 - 150.0)
+		inventory_panel.position = Vector2(size.x * 0.5 - 250.0, size.y * 0.5 - 180.0)
