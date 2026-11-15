@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,16 @@ namespace NovaCraft.World
         private const int InventorySize = 24;
         private const int HotbarSize = 5;
         private const int StackLimit = 64;
+        private const string SaveKey = "NovaCraft.Inventory.v1";
+
+        [Serializable]
+        private sealed class InventorySaveData
+        {
+            public int[] types;
+            public int[] counts;
+            public int[] durability;
+            public int selected;
+        }
 
         [SerializeField, Range(2f, 8f)] private float reach = 5f;
         [SerializeField] private int startingStack = 24;
@@ -33,11 +44,15 @@ namespace NovaCraft.World
         {
             playerCamera = GetComponentInChildren<Camera>();
             world = FindObjectOfType<VoxelWorld>();
-            SetSlot(0, BlockType.Stone, startingStack);
-            SetSlot(1, BlockType.Dirt, startingStack);
-            SetSlot(2, BlockType.Wood, startingStack);
-            SetSlot(3, BlockType.Sand, startingStack);
-            SetSlot(4, BlockType.Gravel, startingStack);
+            if (!LoadInventory())
+            {
+                SetSlot(0, BlockType.Stone, startingStack);
+                SetSlot(1, BlockType.Dirt, startingStack);
+                SetSlot(2, BlockType.Wood, startingStack);
+                SetSlot(3, BlockType.Sand, startingStack);
+                SetSlot(4, BlockType.Gravel, startingStack);
+                SaveInventory();
+            }
             buttonStyle = new GUIStyle(GUI.skin.button)
             {
                 fontSize = Mathf.Max(12, Screen.width / 62),
@@ -51,6 +66,70 @@ namespace NovaCraft.World
                 normal = { textColor = Color.white }
             };
             smallStyle = new GUIStyle(labelStyle) { fontSize = Mathf.Max(10, Screen.width / 82) };
+        }
+
+
+        private bool LoadInventory()
+        {
+            if (!PlayerPrefs.HasKey(SaveKey)) return false;
+            try
+            {
+                InventorySaveData data = JsonUtility.FromJson<InventorySaveData>(PlayerPrefs.GetString(SaveKey));
+                if (data == null || data.types == null || data.counts == null ||
+                    data.types.Length != InventorySize || data.counts.Length != InventorySize) return false;
+
+                for (int i = 0; i < InventorySize; i++)
+                {
+                    int rawType = data.types[i];
+                    BlockType type = Enum.IsDefined(typeof(BlockType), rawType) ? (BlockType)rawType : BlockType.Air;
+                    int count = Mathf.Clamp(data.counts[i], 0, ItemMaxStack(type));
+                    slotTypes[i] = count > 0 ? type : BlockType.Air;
+                    slotCounts[i] = count;
+                    int savedDurability = data.durability != null && data.durability.Length == InventorySize
+                        ? data.durability[i] : 0;
+                    toolDurability[i] = IsTool(type) && count > 0
+                        ? Mathf.Clamp(savedDurability, 1, MaxDurability(type)) : 0;
+                }
+
+                selectedSlot = Mathf.Clamp(data.selected, 0, HotbarSize - 1);
+                return true;
+            }
+            catch (Exception)
+            {
+                PlayerPrefs.DeleteKey(SaveKey);
+                return false;
+            }
+        }
+
+        private void SaveInventory()
+        {
+            InventorySaveData data = new InventorySaveData
+            {
+                types = new int[InventorySize],
+                counts = new int[InventorySize],
+                durability = new int[InventorySize],
+                selected = selectedSlot
+            };
+
+            for (int i = 0; i < InventorySize; i++)
+            {
+                data.types[i] = (int)slotTypes[i];
+                data.counts[i] = slotCounts[i];
+                data.durability[i] = toolDurability[i];
+            }
+
+            PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(data));
+            PlayerPrefs.Save();
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) SaveInventory();
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveInventory();
         }
 
         private void Update()
@@ -142,6 +221,7 @@ namespace NovaCraft.World
             {
                 AddItem(block, 1);
                 if (IsTool(tool) && IsPickaxeTarget(block)) UseTool(toolSlot);
+                SaveInventory();
             }
         }
 
@@ -162,6 +242,7 @@ namespace NovaCraft.World
             {
                 slotCounts[selectedSlot]--;
                 if (slotCounts[selectedSlot] <= 0) SetSlot(selectedSlot, BlockType.Air, 0);
+                SaveInventory();
             }
         }
 
@@ -232,6 +313,7 @@ namespace NovaCraft.World
             if (HasItems(BlockType.Wood, 1) && HasCapacity(BlockType.Planks, 4) &&
                 Consume(BlockType.Wood, 1))
                 AddItem(BlockType.Planks, 4);
+            SaveInventory();
         }
 
         private void CraftWorkbench()
@@ -239,6 +321,7 @@ namespace NovaCraft.World
             if (HasItems(BlockType.Planks, 4) && HasCapacity(BlockType.CraftingTable, 1) &&
                 Consume(BlockType.Planks, 4))
                 AddItem(BlockType.CraftingTable, 1);
+            SaveInventory();
         }
 
         private void CraftSticks()
@@ -246,6 +329,7 @@ namespace NovaCraft.World
             if (HasItems(BlockType.Planks, 2) && HasCapacity(BlockType.Stick, 4) &&
                 Consume(BlockType.Planks, 2))
                 AddItem(BlockType.Stick, 4);
+            SaveInventory();
         }
 
         private void CraftPickaxe(BlockType material)
@@ -254,6 +338,7 @@ namespace NovaCraft.World
                 material == BlockType.Stone ? BlockType.StonePickaxe : BlockType.IronPickaxe;
             if (!HasItems(material, 3) || !HasItems(BlockType.Stick, 2) || !HasCapacity(tool, 1)) return;
             if (Consume(material, 3) && Consume(BlockType.Stick, 2)) AddItem(tool, 1);
+            SaveInventory();
         }
 
         private void SelectOrMoveSlot(int index)
@@ -295,6 +380,7 @@ namespace NovaCraft.World
             if (index < HotbarSize) selectedSlot = index;
             else if (movingSlot < HotbarSize) selectedSlot = movingSlot;
             movingSlot = -1;
+            SaveInventory();
         }
 
         private void OnGUI()
