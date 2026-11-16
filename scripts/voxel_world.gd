@@ -146,38 +146,38 @@ func serialize_blocks() -> Array:
 func load_blocks(saved_blocks: Array, legacy_snapshot: bool = false) -> void:
 	if legacy_snapshot:
 		var loaded: Dictionary = {}
-		for entry in saved_blocks:
-			if entry is Array and entry.size() == 4:
-				var loaded_cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
-				var block_type := int(entry[3])
-				if block_type >= BLOCK_GRASS and block_type <= BLOCK_CRAFTING_TABLE and loaded_cell.x >= 0 and loaded_cell.x < WORLD_SIZE and loaded_cell.z >= 0 and loaded_cell.z < WORLD_SIZE and loaded_cell.y >= 0 and loaded_cell.y < MAX_HEIGHT:
-					loaded[loaded_cell] = block_type
+		for legacy_entry in saved_blocks:
+			if legacy_entry is Array and legacy_entry.size() == 4:
+				var loaded_cell := Vector3i(int(legacy_entry[0]), int(legacy_entry[1]), int(legacy_entry[2]))
+				var legacy_block_type := int(legacy_entry[3])
+				if legacy_block_type >= BLOCK_GRASS and legacy_block_type <= BLOCK_CRAFTING_TABLE and loaded_cell.x >= 0 and loaded_cell.x < WORLD_SIZE and loaded_cell.z >= 0 and loaded_cell.z < WORLD_SIZE and loaded_cell.y >= 0 and loaded_cell.y < MAX_HEIGHT:
+					loaded[loaded_cell] = legacy_block_type
 		blocks = loaded
 		edited_blocks.clear()
-		for cell_variant in base_blocks.keys():
-			var base_cell: Vector3i = cell_variant
+		for base_variant in base_blocks.keys():
+			var base_cell: Vector3i = base_variant
 			var base_type := int(base_blocks[base_cell])
 			var loaded_type := int(blocks.get(base_cell, BLOCK_AIR))
 			if base_type != loaded_type:
 				edited_blocks[base_cell] = loaded_type
-		for cell_variant in blocks.keys():
-			var added_cell: Vector3i = cell_variant
+		for added_variant in blocks.keys():
+			var added_cell: Vector3i = added_variant
 			if not base_blocks.has(added_cell):
 				edited_blocks[added_cell] = int(blocks[added_cell])
 	else:
 		blocks = base_blocks.duplicate()
 		edited_blocks.clear()
-		for entry in saved_blocks:
-			if entry is Array and entry.size() == 4:
-				var edit_cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
-				var block_type := int(entry[3])
-				if edit_cell.x < 0 or edit_cell.x >= WORLD_SIZE or edit_cell.z < 0 or edit_cell.z >= WORLD_SIZE or edit_cell.y < 0 or edit_cell.y >= MAX_HEIGHT or block_type < BLOCK_AIR or block_type > BLOCK_CRAFTING_TABLE:
+		for sparse_entry in saved_blocks:
+			if sparse_entry is Array and sparse_entry.size() == 4:
+				var edit_cell := Vector3i(int(sparse_entry[0]), int(sparse_entry[1]), int(sparse_entry[2]))
+				var sparse_block_type := int(sparse_entry[3])
+				if edit_cell.x < 0 or edit_cell.x >= WORLD_SIZE or edit_cell.z < 0 or edit_cell.z >= WORLD_SIZE or edit_cell.y < 0 or edit_cell.y >= MAX_HEIGHT or sparse_block_type < BLOCK_AIR or sparse_block_type > BLOCK_CRAFTING_TABLE:
 					continue
-				edited_blocks[edit_cell] = block_type
-				if block_type == BLOCK_AIR:
+				edited_blocks[edit_cell] = sparse_block_type
+				if sparse_block_type == BLOCK_AIR:
 					blocks.erase(edit_cell)
 				else:
-					blocks[edit_cell] = block_type
+					blocks[edit_cell] = sparse_block_type
 	edit_revision += 1
 	_rebuild_mesh()
 
