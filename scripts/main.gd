@@ -8,6 +8,7 @@ const SAVE_PATH := "user://novacraft_save.json"
 var world: Variant
 var hud: Variant
 var is_loading := false
+var save_pending := false
 
 func _ready() -> void:
 	_build_environment()
@@ -25,10 +26,11 @@ func _ready() -> void:
 	hud.name = "MobileHUD"
 	add_child(hud)
 	hud.player = player
+	hud.world = world
 	player.hud = hud
 
-	world.world_changed.connect(_save_game)
-	hud.inventory_changed.connect(_save_game)
+	world.world_changed.connect(_schedule_save)
+	hud.inventory_changed.connect(_schedule_save)
 	call_deferred("_load_game")
 
 func _load_game() -> void:
@@ -43,17 +45,27 @@ func _load_game() -> void:
 		push_warning("NovaCraft: старое сохранение пропущено, создан новый мир")
 		return
 	is_loading = true
+	var save_version := int(parsed.get("version", 2))
 	if parsed.has("world") and parsed["world"] is Array:
-		world.load_blocks(parsed["world"])
+		world.load_blocks(parsed["world"], save_version < 3)
 	if parsed.has("inventory") and parsed["inventory"] is Dictionary:
 		hud.load_inventory(parsed["inventory"])
 	is_loading = false
+	if save_version < 3:
+		_schedule_save()
+
+func _schedule_save() -> void:
+	if is_loading or save_pending:
+		return
+	save_pending = true
+	call_deferred("_save_game")
 
 func _save_game() -> void:
+	save_pending = false
 	if is_loading or not is_instance_valid(world) or not is_instance_valid(hud):
 		return
 	var data := {
-		"version": 2,
+		"version": 3,
 		"world": world.serialize_blocks(),
 		"inventory": hud.serialize_inventory()
 	}
@@ -63,6 +75,10 @@ func _save_game() -> void:
 		return
 	file.store_string(JSON.stringify(data))
 	file.flush()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		_save_game()
 
 func _build_environment() -> void:
 	var sun := DirectionalLight3D.new()
