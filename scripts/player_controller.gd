@@ -8,6 +8,7 @@ const REACH := 6.0
 var world: Variant
 var hud: Variant
 var mobile_move := Vector2.ZERO
+var input_locked := false
 var look_pitch := 0.0
 var camera: Camera3D
 
@@ -29,9 +30,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity += get_gravity() * delta
-	var input_vector := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	if mobile_move.length() > 0.05:
-		input_vector = mobile_move
+	var input_vector := Vector2.ZERO
+	if not input_locked:
+		input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+		if mobile_move.length() > 0.05:
+			input_vector = mobile_move
 	var direction := (transform.basis * Vector3(input_vector.x, 0, input_vector.y)).normalized()
 	if direction:
 		velocity.x = direction.x * SPEED
@@ -39,15 +42,17 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, SPEED * 7.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, SPEED * 7.0 * delta)
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if not input_locked and Input.is_action_just_pressed("jump") and is_on_floor():
 		jump()
 	move_and_slide()
 
 func jump() -> void:
-	if is_on_floor():
+	if not input_locked and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 
 func _unhandled_input(event: InputEvent) -> void:
+	if input_locked:
+		return
 	if event is InputEventScreenDrag:
 		if event.position.x > get_viewport().get_visible_rect().size.x * 0.42:
 			_rotate_look(event.relative)
@@ -66,7 +71,7 @@ func place_target() -> void:
 	_edit_target(true)
 
 func _edit_target(placing: bool) -> void:
-	if not is_instance_valid(world):
+	if input_locked or not is_instance_valid(world):
 		return
 	var origin := camera.global_position
 	var target := origin + (-camera.global_transform.basis.z * REACH)
@@ -84,10 +89,15 @@ func _edit_target(placing: bool) -> void:
 			return
 		if hud != null:
 			var selected_type: int = hud.get_selected_block()
-			if selected_type != 0 and world.place_block(cell, selected_type):
+			if selected_type != 0 and hud.is_selected_placeable() and world.place_block(cell, selected_type):
 				hud.remove_selected_block()
 	else:
 		cell = Vector3i(floori(point.x - normal.x * 0.02), floori(point.y - normal.y * 0.02), floori(point.z - normal.z * 0.02))
+		var target_type: int = world.get_block(cell)
+		if target_type == 0:
+			return
+		if hud != null and not hud.can_add_block(target_type):
+			return
 		var removed_type: int = world.break_block(cell)
 		if removed_type != 0 and hud != null:
 			hud.add_block(removed_type)
