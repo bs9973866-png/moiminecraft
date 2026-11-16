@@ -148,36 +148,36 @@ func load_blocks(saved_blocks: Array, legacy_snapshot: bool = false) -> void:
 		var loaded: Dictionary = {}
 		for entry in saved_blocks:
 			if entry is Array and entry.size() == 4:
-				var cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
+				var loaded_cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
 				var block_type := int(entry[3])
-				if block_type >= BLOCK_GRASS and block_type <= BLOCK_CRAFTING_TABLE and cell.x >= 0 and cell.x < WORLD_SIZE and cell.z >= 0 and cell.z < WORLD_SIZE and cell.y >= 0 and cell.y < MAX_HEIGHT:
-					loaded[cell] = block_type
+				if block_type >= BLOCK_GRASS and block_type <= BLOCK_CRAFTING_TABLE and loaded_cell.x >= 0 and loaded_cell.x < WORLD_SIZE and loaded_cell.z >= 0 and loaded_cell.z < WORLD_SIZE and loaded_cell.y >= 0 and loaded_cell.y < MAX_HEIGHT:
+					loaded[loaded_cell] = block_type
 		blocks = loaded
 		edited_blocks.clear()
 		for cell_variant in base_blocks.keys():
-			var cell: Vector3i = cell_variant
-			var base_type := int(base_blocks[cell])
-			var loaded_type := int(blocks.get(cell, BLOCK_AIR))
+			var base_cell: Vector3i = cell_variant
+			var base_type := int(base_blocks[base_cell])
+			var loaded_type := int(blocks.get(base_cell, BLOCK_AIR))
 			if base_type != loaded_type:
-				edited_blocks[cell] = loaded_type
+				edited_blocks[base_cell] = loaded_type
 		for cell_variant in blocks.keys():
-			var cell: Vector3i = cell_variant
-			if not base_blocks.has(cell):
-				edited_blocks[cell] = int(blocks[cell])
+			var added_cell: Vector3i = cell_variant
+			if not base_blocks.has(added_cell):
+				edited_blocks[added_cell] = int(blocks[added_cell])
 	else:
 		blocks = base_blocks.duplicate()
 		edited_blocks.clear()
 		for entry in saved_blocks:
 			if entry is Array and entry.size() == 4:
-				var cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
+				var edit_cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
 				var block_type := int(entry[3])
-				if cell.x < 0 or cell.x >= WORLD_SIZE or cell.z < 0 or cell.z >= WORLD_SIZE or cell.y < 0 or cell.y >= MAX_HEIGHT or block_type < BLOCK_AIR or block_type > BLOCK_CRAFTING_TABLE:
+				if edit_cell.x < 0 or edit_cell.x >= WORLD_SIZE or edit_cell.z < 0 or edit_cell.z >= WORLD_SIZE or edit_cell.y < 0 or edit_cell.y >= MAX_HEIGHT or block_type < BLOCK_AIR or block_type > BLOCK_CRAFTING_TABLE:
 					continue
-				edited_blocks[cell] = block_type
+				edited_blocks[edit_cell] = block_type
 				if block_type == BLOCK_AIR:
-					blocks.erase(cell)
+					blocks.erase(edit_cell)
 				else:
-					blocks[cell] = block_type
+					blocks[edit_cell] = block_type
 	edit_revision += 1
 	_rebuild_mesh()
 
