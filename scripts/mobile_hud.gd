@@ -43,6 +43,9 @@ var hotbar_buttons: Array[Button] = []
 var recipe_buttons: Array[Button] = []
 var recipe_status: Label
 var held_axes: Dictionary = {}
+var workbench_cache_cell := Vector3i(2147483647, 2147483647, 2147483647)
+var workbench_cache_revision := -1
+var workbench_cache_value := false
 
 var style_button: StyleBoxFlat
 var style_slot: StyleBoxFlat
@@ -316,7 +319,15 @@ func _consume_item(item_type: int, amount: int) -> bool:
 	return remaining == 0
 
 func _has_workbench_nearby() -> bool:
-	return is_instance_valid(world) and is_instance_valid(player) and world.has_block_near(player.global_position, ITEM_CRAFTING_TABLE, 4)
+	if not is_instance_valid(world) or not is_instance_valid(player):
+		return false
+	var cell := Vector3i(floori(player.global_position.x), floori(player.global_position.y), floori(player.global_position.z))
+	var revision := int(world.edit_revision)
+	if cell != workbench_cache_cell or revision != workbench_cache_revision:
+		workbench_cache_cell = cell
+		workbench_cache_revision = revision
+		workbench_cache_value = world.has_block_near(player.global_position, ITEM_CRAFTING_TABLE, 4)
+	return workbench_cache_value
 
 func _craft(output_type: int, output_amount: int, requirements: Dictionary, needs_workbench: bool = false) -> void:
 	if needs_workbench and not _has_workbench_nearby():
