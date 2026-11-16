@@ -150,6 +150,13 @@ func _build_inventory() -> void:
 	heading.add_theme_font_size_override("font_size", 20)
 	outer.add_child(heading)
 
+	var transfer_hint := Label.new()
+	transfer_hint.text = "Перенос: выбери предмет, затем слот назначения"
+	transfer_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	transfer_hint.add_theme_font_size_override("font_size", 12)
+	transfer_hint.modulate = Color(1, 1, 1, 0.78)
+	outer.add_child(transfer_hint)
+
 	inventory_grid = GridContainer.new()
 	inventory_grid.columns = 6
 	inventory_grid.add_theme_constant_override("h_separation", 5)
