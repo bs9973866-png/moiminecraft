@@ -32,6 +32,8 @@ namespace NovaCraft.World
         private int selectedSlot;
         private int movingSlot = -1;
         private bool inventoryOpen;
+        private bool workbenchNearby;
+        private Vector3Int lastWorkbenchCell = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
         private bool hasTarget;
         private RaycastHit targetHit;
         private GUIStyle buttonStyle;
@@ -138,6 +140,12 @@ namespace NovaCraft.World
             if (inventoryOpen)
             {
                 hasTarget = false;
+                Vector3Int playerCell = new Vector3Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y), Mathf.FloorToInt(transform.position.z));
+                if (playerCell != lastWorkbenchCell)
+                {
+                    lastWorkbenchCell = playerCell;
+                    workbenchNearby = HasNearbyWorkbench();
+                }
                 return;
             }
 
@@ -332,8 +340,21 @@ namespace NovaCraft.World
             SaveInventory();
         }
 
+        private bool HasNearbyWorkbench()
+        {
+            if (world == null) return false;
+            Vector3Int center = new Vector3Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y), Mathf.FloorToInt(transform.position.z));
+            for (int x = -4; x <= 4; x++)
+            for (int z = -4; z <= 4; z++)
+            for (int y = -3; y <= 1; y++)
+                if (world.GetBlock(center + new Vector3Int(x, y, z)) == BlockType.CraftingTable)
+                    return true;
+            return false;
+        }
+
         private void CraftPickaxe(BlockType material)
         {
+            if (!workbenchNearby) return;
             BlockType tool = material == BlockType.Planks ? BlockType.WoodenPickaxe :
                 material == BlockType.Stone ? BlockType.StonePickaxe : BlockType.IronPickaxe;
             if (!HasItems(material, 3) || !HasItems(BlockType.Stick, 2) || !HasCapacity(tool, 1)) return;
@@ -343,6 +364,7 @@ namespace NovaCraft.World
 
         private void CraftBestAvailablePickaxe()
         {
+            if (!workbenchNearby) return;
             BlockType[] materials = { BlockType.Planks, BlockType.Stone, BlockType.IronOre };
             foreach (BlockType material in materials)
             {
@@ -437,6 +459,8 @@ namespace NovaCraft.World
             {
                 inventoryOpen = true;
                 movingSlot = -1;
+                lastWorkbenchCell = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+                workbenchNearby = HasNearbyWorkbench();
             }
         }
 
@@ -475,7 +499,8 @@ namespace NovaCraft.World
             }
             GUI.backgroundColor = Color.white;
 
-            float recipeY = gridTop + 4f * (cell + gap) + 7f * scale;
+            float recipeY = gridTop + 4f * (cell + gap) + 22f * scale;
+            GUI.Label(new Rect(x + margin, recipeY - 18f * scale, panelWidth - 2f * margin, 16f * scale), workbenchNearby ? "Верстак рядом: кирки доступны" : "Поставь верстак рядом для крафта кирок", smallStyle);
             float recipeGap = 5f * scale;
             float recipeHeight = Mathf.Max(28f * scale, (panelHeight - (recipeY - y) - 12f * scale - recipeGap) * 0.5f);
             float recipeWidth = (panelWidth - 3f * margin) * 0.5f;
