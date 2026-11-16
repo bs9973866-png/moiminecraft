@@ -23,6 +23,7 @@ var terrain_mesh: ArrayMesh
 var block_atlas: Texture2D
 var terrain_material: StandardMaterial3D
 var mesh_rebuild_queued := false
+var edit_revision := 0
 
 signal world_changed
 
@@ -63,7 +64,7 @@ func _generate_world() -> void:
 	for x in range(3, WORLD_SIZE - 3):
 		for z in range(3, WORLD_SIZE - 3):
 			var hash_value := absi(x * 73856093 ^ z * 19349663 ^ 481516)
-			if hash_value % 100 >= 4:
+			if hash_value % 100 >= 2:
 				continue
 			var surface: int = int(surface_heights[Vector2i(x, z)])
 			if surface < 10:
@@ -102,6 +103,7 @@ func break_block(cell: Vector3i) -> int:
 		return BLOCK_AIR
 	blocks.erase(cell)
 	edited_blocks[cell] = BLOCK_AIR
+	edit_revision += 1
 	_queue_mesh_rebuild()
 	world_changed.emit()
 	return removed_type
@@ -113,6 +115,7 @@ func place_block(cell: Vector3i, block_type: int = BLOCK_DIRT) -> bool:
 		return false
 	blocks[cell] = block_type
 	edited_blocks[cell] = block_type
+	edit_revision += 1
 	_queue_mesh_rebuild()
 	world_changed.emit()
 	return true
@@ -175,6 +178,7 @@ func load_blocks(saved_blocks: Array, legacy_snapshot: bool = false) -> void:
 					blocks.erase(cell)
 				else:
 					blocks[cell] = block_type
+	edit_revision += 1
 	_rebuild_mesh()
 
 func _create_block_atlas() -> Texture2D:
