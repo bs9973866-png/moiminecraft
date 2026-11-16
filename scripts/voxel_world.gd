@@ -99,7 +99,7 @@ func get_block(cell: Vector3i) -> int:
 
 func break_block(cell: Vector3i) -> int:
 	var removed_type := get_block(cell)
-	if removed_type == BLOCK_AIR or cell.y < 0 or cell.y >= MAX_HEIGHT:
+	if removed_type == BLOCK_AIR or cell.x < 0 or cell.x >= WORLD_SIZE or cell.z < 0 or cell.z >= WORLD_SIZE or cell.y < 0 or cell.y >= MAX_HEIGHT:
 		return BLOCK_AIR
 	blocks.erase(cell)
 	edited_blocks[cell] = BLOCK_AIR
@@ -109,7 +109,7 @@ func break_block(cell: Vector3i) -> int:
 	return removed_type
 
 func place_block(cell: Vector3i, block_type: int = BLOCK_DIRT) -> bool:
-	if get_block(cell) != BLOCK_AIR or cell.y < 0 or cell.y >= MAX_HEIGHT:
+	if get_block(cell) != BLOCK_AIR or cell.x < 0 or cell.x >= WORLD_SIZE or cell.z < 0 or cell.z >= WORLD_SIZE or cell.y < 0 or cell.y >= MAX_HEIGHT:
 		return false
 	if not is_placeable_block(block_type):
 		return false
@@ -150,7 +150,7 @@ func load_blocks(saved_blocks: Array, legacy_snapshot: bool = false) -> void:
 			if entry is Array and entry.size() == 4:
 				var cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
 				var block_type := int(entry[3])
-				if block_type >= BLOCK_GRASS and block_type <= BLOCK_CRAFTING_TABLE and cell.y >= 0 and cell.y < MAX_HEIGHT:
+				if block_type >= BLOCK_GRASS and block_type <= BLOCK_CRAFTING_TABLE and cell.x >= 0 and cell.x < WORLD_SIZE and cell.z >= 0 and cell.z < WORLD_SIZE and cell.y >= 0 and cell.y < MAX_HEIGHT:
 					loaded[cell] = block_type
 		blocks = loaded
 		edited_blocks.clear()
@@ -171,7 +171,7 @@ func load_blocks(saved_blocks: Array, legacy_snapshot: bool = false) -> void:
 			if entry is Array and entry.size() == 4:
 				var cell := Vector3i(int(entry[0]), int(entry[1]), int(entry[2]))
 				var block_type := int(entry[3])
-				if cell.y < 0 or cell.y >= MAX_HEIGHT or block_type < BLOCK_AIR or block_type > BLOCK_CRAFTING_TABLE:
+				if cell.x < 0 or cell.x >= WORLD_SIZE or cell.z < 0 or cell.z >= WORLD_SIZE or cell.y < 0 or cell.y >= MAX_HEIGHT or block_type < BLOCK_AIR or block_type > BLOCK_CRAFTING_TABLE:
 					continue
 				edited_blocks[cell] = block_type
 				if block_type == BLOCK_AIR:
