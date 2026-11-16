@@ -102,7 +102,10 @@ func break_block(cell: Vector3i) -> int:
 	if removed_type == BLOCK_AIR or cell.x < 0 or cell.x >= WORLD_SIZE or cell.z < 0 or cell.z >= WORLD_SIZE or cell.y < 0 or cell.y >= MAX_HEIGHT:
 		return BLOCK_AIR
 	blocks.erase(cell)
-	edited_blocks[cell] = BLOCK_AIR
+	if int(base_blocks.get(cell, BLOCK_AIR)) == BLOCK_AIR:
+		edited_blocks.erase(cell)
+	else:
+		edited_blocks[cell] = BLOCK_AIR
 	edit_revision += 1
 	_queue_mesh_rebuild()
 	world_changed.emit()
@@ -114,7 +117,10 @@ func place_block(cell: Vector3i, block_type: int = BLOCK_DIRT) -> bool:
 	if not is_placeable_block(block_type):
 		return false
 	blocks[cell] = block_type
-	edited_blocks[cell] = block_type
+	if int(base_blocks.get(cell, BLOCK_AIR)) == block_type:
+		edited_blocks.erase(cell)
+	else:
+		edited_blocks[cell] = block_type
 	edit_revision += 1
 	_queue_mesh_rebuild()
 	world_changed.emit()
